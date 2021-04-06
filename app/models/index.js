@@ -1,0 +1,30 @@
+const dbConfig = require("../config/db.config.js");
+
+const Sequelize = require("sequelize");
+const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
+  host: dbConfig.HOST,
+  dialect: dbConfig.dialect,
+  operatorsAliases: false,
+
+  pool: {
+    max: dbConfig.pool.max,
+    min: dbConfig.pool.min,
+    acquire: dbConfig.pool.acquire,
+    idle: dbConfig.pool.idle
+  }
+});
+
+const db = {};
+
+db.Sequelize = Sequelize;
+db.sequelize = sequelize;
+
+db.aformattable = require("./aformattable.model.js")(sequelize, Sequelize);
+db.Distance = require("./distace.model.js")(sequelize, Sequelize);
+
+/*связи*/
+db.aformattable.belongsTo(db.Distance, {
+  foreignKey: "distanceId",
+  as: "Distances",
+});
+module.exports = db;
