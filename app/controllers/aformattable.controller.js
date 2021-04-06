@@ -48,16 +48,26 @@ exports.GetDetail = async (req, res) => {
 //Получить полные данные по таблице с параметрами
 exports.findAllAsync = async (req, res) => {
     console.log("True action await");
-    const {
+    let dateStart = new Date();
+    dateStart.setDate(dateStart.getDate() - 7);
+    let {
         page,
         order = "name",
         minMiles = 0,
         maxMiles = 10000,
         sortField = "name",
         sortType = "ASC",
-        startDate,
+        startDate =dateStart,
         stopDate = new Date(),
     } = req.query;
+
+
+    order = [[sortField, sortType]];
+
+    if (sortField==="avgPrice") order =[[db.sequelize.fn('AVG', db.sequelize.col('mid')),sortType]];
+    if (sortField==="avgVolume")order =[[db.sequelize.fn('AVG', db.sequelize.col('volume')),sortType]];
+
+
     let TableData = await Promise.all((await RouteTable.findAll({
         offset: page * 11,
         limit: 11,
@@ -91,7 +101,7 @@ exports.findAllAsync = async (req, res) => {
             }
         }],
         group: ['name'],
-        order: [[sortField, sortType]]
+        order: order
     })).map(async (it) => ({
         ...(it.toJSON()),
         addParams: await RouteTable.findAll(
@@ -105,7 +115,8 @@ exports.findAllAsync = async (req, res) => {
                 where: {name: it.name}
             }
         ),
-        route:it.route.split(',')
+        route:it.route.split(','),
+        pm:it.mid/it.mile,
     })));
     return res.status(200).json({TableData, total: await RouteTable.count()});
 }
@@ -121,6 +132,9 @@ exports.findAll = (req, res) => {
             [Op.like]: `%${route}%`,
         }
     } : null;
+
+
+
 
     RouteTable.findAll({
 
