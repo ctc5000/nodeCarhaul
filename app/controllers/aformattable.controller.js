@@ -104,7 +104,8 @@ exports.findAllAsync = async (req, res) => {
                 ],
                 where: {name: it.name}
             }
-        )
+        ),
+        route:it.route.split(',')
     })));
     return res.status(200).json({TableData, total: await RouteTable.count()});
 }
