@@ -47,7 +47,7 @@ exports.GetDetail = async (req, res) => {
 
 //Получить полные данные по таблице с параметрами
 exports.findAllAsync = async (req, res) => {
-    console.log("True action await");
+    console.log("True action findAllAsync");
     let dateStart = new Date();
     dateStart.setDate(dateStart.getDate() - 7);
     let {
@@ -66,19 +66,15 @@ exports.findAllAsync = async (req, res) => {
 
     if (sortField==="avgPrice") order =[[db.sequelize.fn('AVG', db.sequelize.col('mid')),sortType]];
     if (sortField==="avgVolume")order =[[db.sequelize.fn('AVG', db.sequelize.col('volume')),sortType]];
-
-
     let TableData = await Promise.all((await RouteTable.findAll({
         offset: page * 11,
         limit: 11,
-        where:
-            {
-                datecreate:
-                    {
-                        [Op.between]: [startDate, stopDate]
-                    },
-
-            },
+           where:  {
+                  datecreate:
+                      {
+                          [Op.between]: [startDate, stopDate]
+                      },
+              },
         attributes: [
             'id',
             'name',
@@ -120,6 +116,99 @@ exports.findAllAsync = async (req, res) => {
     })));
     return res.status(200).json({TableData, total: await RouteTable.count()});
 }
+
+
+
+//Получить полные данные по таблице с параметрами и фильтром
+exports.findAllAsyncFiltered = async (req, res) => {
+    console.log("True action findAllAsyncFiltered");
+    let dateStart = new Date();
+    dateStart.setDate(dateStart.getDate() - 7);
+    let {
+        page,
+        order = "name",
+        minMiles = 0,
+        maxMiles = 10000,
+        sortField = "name",
+        sortType = "ASC",
+        startDate =dateStart,
+        stopDate = new Date(),
+        states = ["ALAR"]
+    } = req.query;
+    if(states.length ===1 ) {
+        return res.status(500).json('null parse data');
+    }
+
+    let statesJson = JSON.parse(states);
+
+
+    order = [[sortField, sortType]];
+    if (sortField==="avgPrice") order =[[db.sequelize.fn('AVG', db.sequelize.col('mid')),sortType]];
+    if (sortField==="avgVolume")order =[[db.sequelize.fn('AVG', db.sequelize.col('volume')),sortType]];
+    let TableData = await Promise.all((await RouteTable.findAll({
+        offset: page * 11,
+        limit: 11,
+        where:  {
+            datecreate:
+                {
+                    [Op.between]: [startDate, stopDate]
+                },
+            name:
+                {
+                    [Op.in]:statesJson
+                }
+
+        },
+        attributes: [
+            'id',
+            'name',
+            'mile',
+            'route',
+            'mid',
+            'volume',
+            [db.sequelize.fn('AVG', db.sequelize.col('volume')), 'avgVolume'],
+            [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgPrice"],
+        ],
+        include: [{// Notice `include` takes an ARRAY
+            model: Distance,
+            as: 'Distances',
+            attributes: ['distance'],
+            where: {
+                distance:
+                    {
+                        [Op.between]: [minMiles, maxMiles]
+                    }
+            }
+        }],
+        group: ['name'],
+        order: order
+    })).map(async (it) => ({
+        ...(it.toJSON()),
+        addParams: await RouteTable.findAll(
+            {
+                attributes: [
+                    [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgAllPrice"],
+                    [db.sequelize.fn('AVG', db.sequelize.col('volume')), "avgAllVollume"],
+                    //   [db.sequelize.literal('(100*(avg(aformattable.mid)-(SELECT avg(a.mid) FROM `aformattables` a where a.name = aformattable.name))/(SELECT avg(a.mid) FROM `aformattables` a where a.name = aformattable.name)) '),'PriceProcent'],
+                    //  [db.sequelize.literal('(100*(avg(aformattable.volume)-(SELECT avg(a.volume) FROM `aformattables` a where a.name = aformattable.name)) /(SELECT avg(a.volume) FROM `aformattables` a where a.name = aformattable.name)) '),'VollumeProcent']
+                ],
+                where: {name: it.name}
+            }
+        ),
+        route:it.route.split(','),
+        pm:it.mid/it.mile,
+    })));
+    return res.status(200).json({TableData, total: await RouteTable.count()});
+}
+
+
+
+
+
+
+
+
+
 
 
 // Retrieve all Tutorials from the database.
