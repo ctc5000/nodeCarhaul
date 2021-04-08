@@ -14,6 +14,9 @@ module.exports = app => {
     //Получить данные по направлению
     router.get("/detail",  routeTable.GetDetail);
 
+    //Получить данные по направлению
+    router.get("/trends",  routeTable.findAllTrendsAsync);
+
     router.get("/published", routeTable.findAllPublished);
 
     router.get("/:id", routeTable.findOne);

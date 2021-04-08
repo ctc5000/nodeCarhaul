@@ -1,12 +1,37 @@
 const db = require("../models");
 const RouteTable = db.aformattable;
 const Distance = db.Distance;
+const Trends = db.Trends;
 const Op = db.Sequelize.Op;
 
 // Create and Save a new Tutorial
 exports.create = (req, res) => {
 
 };
+
+exports.findAllTrendsAsync = async (req, res) => {
+    console.log("True action findAllTrendsAsync");
+    const
+        {
+            namestate
+        } = req.query;
+    let TrendsReturn = await Promise.all((await Trends.findAll({
+        attributes:
+            [
+                'value',
+            ],
+        where: {
+            namestate: [namestate],
+            intervaldate:30,
+        }
+    })));
+
+    return res.status(200).json({
+        TrendsReturn
+    });
+}
+
+
 //Получить данные по направлению
 exports.GetDetail = async (req, res) => {
     let dateStart = new Date();
@@ -17,6 +42,24 @@ exports.GetDetail = async (req, res) => {
             startDate = dateStart,
             stopDate = new Date(),
         } = req.query;
+
+    let GraphPoints = await Promise.all((await RouteTable.findAll({
+        attributes: [
+            ['mid', 'price'],
+            'volume',
+            'datecreate',
+        ],
+        where: {
+            name: routeName,
+            datecreate:
+                {
+                    [Op.between]: [startDate, stopDate]
+                },
+        },
+        group: ['datecreate'],
+    })));
+
+
     let Deatail = await Promise.all((await RouteTable.findAll({
         attributes: [
             'id',
@@ -41,8 +84,39 @@ exports.GetDetail = async (req, res) => {
             attributes: ['distance'],
         }],
         group: ['name'],
-    })))
-    return res.status(200).json({Deatail});
+
+    })).map(async (it) => ({
+            ...(it.toJSON()),
+            trend1:
+                await Trends.findOne({
+                    attributes:
+                        [
+                            'value',
+                        ],
+                    where: {
+                        namestate:  it.name.substring(0,2),
+                        intervaldate:30,
+                    }
+                }),
+            trend2:
+                await Trends.findOne({
+                    attributes:
+                        [
+                            'value',
+                        ],
+                    where: {
+                        namestate:  it.name.substring(2,4),
+                        intervaldate:30,
+                    }
+                }),
+
+
+        }))
+
+
+
+    )
+    return res.status(200).json({Deatail, GraphPoints: GraphPoints});
 }
 
 //Получить полные данные по таблице с параметрами
@@ -113,6 +187,30 @@ exports.findAllAsync = async (req, res) => {
         ),
         route: it.route.split(','),
         pm: it.mid / it.mile,
+        trend1:
+            await Trends.findOne({
+                attributes:
+                    [
+                        'value',
+                    ],
+                where: {
+                    namestate:  it.name.substring(0,2),
+                    intervaldate:30,
+                }
+            }),
+        trend2:
+            await Trends.findOne({
+                attributes:
+                    [
+                        'value',
+                    ],
+                where: {
+                    namestate:  it.name.substring(2,4),
+                    intervaldate:30,
+                }
+            }),
+
+
     })));
 
     let counter = await Promise.all((
@@ -132,11 +230,9 @@ exports.findAllAsync = async (req, res) => {
     ));
 
     return res.status(200).json({
-        TableData,totalOne:counter.length, totalPages:Math.floor(counter.length/11)+1, curPage: page
+        TableData, totalOne: counter.length, totalPages: Math.floor(counter.length / 11) + 1, curPage: page
     });
 }
-
-
 //Получить полные данные по таблице с параметрами и фильтром
 exports.findAllAsyncFiltered = async (req, res) => {
     console.log("True action findAllAsyncFiltered");
@@ -215,6 +311,28 @@ exports.findAllAsyncFiltered = async (req, res) => {
         ),
         route: it.route.split(','),
         pm: it.mid / it.mile,
+        trend1:
+            await Trends.findOne({
+                attributes:
+                    [
+                        'value',
+                    ],
+                where: {
+                    namestate:  it.name.substring(0,2),
+                    intervaldate:30,
+                }
+            }),
+        trend2:
+            await Trends.findOne({
+                attributes:
+                    [
+                        'value',
+                    ],
+                where: {
+                    namestate:  it.name.substring(2,4),
+                    intervaldate:30,
+                }
+            }),
     })));
 
     let counter = await Promise.all((
@@ -238,73 +356,10 @@ exports.findAllAsyncFiltered = async (req, res) => {
     ));
 
     return res.status(200).json({
-        TableData,totalOne:counter.length, totalPages:Math.floor(counter.length/11)+1, curPage: page
+        TableData, totalOne: counter.length, totalPages: Math.floor(counter.length / 11) + 1, curPage: page
     });
 }
 
-
-// Retrieve all Tutorials from the database.
-exports.findAll = (req, res) => {
-    console.log(req.query.route)
-    const route = req.query.route;
-    const offset = req.query.offset;
-    let condition = route ? {
-        route: {
-            [Op.like]: `%${route}%`,
-        }
-    } : null;
-
-
-    RouteTable.findAll({
-
-        attributes: [
-            //  db.sequelize.literal('(SELECT avg(a.mid) FROM `aformattables` a where a.name = aformattable.name) as avgAllPrice'),
-            'name',
-            'mile',
-            'route',
-            'mid',
-            'volume',
-            //(avg(tab.mid)/max(tab.mid))*100 as PriceProcent,
-            [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgPrice"],
-            [db.sequelize.fn('AVG', db.sequelize.col('volume')), 'avgVolume'],
-
-        ],
-        include: [{// Notice `include` takes an ARRAY
-            model: Distance,
-            as: 'Distances',
-            attributes: ['distance'],
-        }],
-        group: ['name'],
-        order: ['mid'],
-        sort: ['mid', 'ASC'],
-        limit: 11,
-        offset: offset * 11,
-
-    })
-        .then(data => {
-            for (let i = 0; i < data.length; i++) {
-                data[i]['avgAllPrice'] = new Promise(resolve => {
-                    const avgAllPrice = RouteTable.findOne(
-                        {
-                            attributes: [
-                                [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgPrice"]
-                            ],
-                            where: {name: data[i].name}
-                        }
-                    )
-                    return avgAllPrice;
-                })
-            }
-
-            res.send(data);
-        },)
-        .catch(err => {
-            res.status(500).send({
-                message:
-                    err.message || "Some error occurred while retrieving tutorials."
-            });
-        });
-};
 
 // Find a single Tutorial with an id
 exports.findOne = (req, res) => {
