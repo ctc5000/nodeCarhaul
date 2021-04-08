@@ -15,7 +15,7 @@ exports.GetDetail = async (req, res) => {
         {
             routeName,
             startDate = dateStart,
-            stopDate =new Date(),
+            stopDate = new Date(),
         } = req.query;
     let Deatail = await Promise.all((await RouteTable.findAll({
         attributes: [
@@ -57,24 +57,24 @@ exports.findAllAsync = async (req, res) => {
         maxMiles = 10000,
         sortField = "name",
         sortType = "ASC",
-        startDate =dateStart,
+        startDate = dateStart,
         stopDate = new Date(),
     } = req.query;
 
 
     order = [[sortField, sortType]];
 
-    if (sortField==="avgPrice") order =[[db.sequelize.fn('AVG', db.sequelize.col('mid')),sortType]];
-    if (sortField==="avgVolume")order =[[db.sequelize.fn('AVG', db.sequelize.col('volume')),sortType]];
+    if (sortField === "avgPrice") order = [[db.sequelize.fn('AVG', db.sequelize.col('mid')), sortType]];
+    if (sortField === "avgVolume") order = [[db.sequelize.fn('AVG', db.sequelize.col('volume')), sortType]];
     let TableData = await Promise.all((await RouteTable.findAll({
         offset: page * 11,
         limit: 11,
-           where:  {
-                  datecreate:
-                      {
-                          [Op.between]: [startDate, stopDate]
-                      },
-              },
+        where: {
+            datecreate:
+                {
+                    [Op.between]: [startDate, stopDate]
+                },
+        },
         attributes: [
             'id',
             'name',
@@ -111,12 +111,30 @@ exports.findAllAsync = async (req, res) => {
                 where: {name: it.name}
             }
         ),
-        route:it.route.split(','),
-        pm:it.mid/it.mile,
+        route: it.route.split(','),
+        pm: it.mid / it.mile,
     })));
-    return res.status(200).json({TableData, total: await RouteTable.count()});
-}
 
+    let counter = await Promise.all((
+
+        await RouteTable.count(
+            {
+                where: {
+                    datecreate:
+                        {
+                            [Op.between]: [startDate, stopDate]
+                        },
+                }
+                , group: ['name']
+            }
+        )
+
+    ));
+
+    return res.status(200).json({
+        TableData,totalOne:counter.length, totalPages:Math.floor(counter.length/11)+1, curPage: page
+    });
+}
 
 
 //Получить полные данные по таблице с параметрами и фильтром
@@ -131,11 +149,11 @@ exports.findAllAsyncFiltered = async (req, res) => {
         maxMiles = 10000,
         sortField = "name",
         sortType = "ASC",
-        startDate =dateStart,
+        startDate = dateStart,
         stopDate = new Date(),
         states = ["ALAR"]
     } = req.query;
-    if(states.length ===1 ) {
+    if (states.length === 1) {
         return res.status(500).json('null parse data');
     }
 
@@ -143,19 +161,19 @@ exports.findAllAsyncFiltered = async (req, res) => {
 
 
     order = [[sortField, sortType]];
-    if (sortField==="avgPrice") order =[[db.sequelize.fn('AVG', db.sequelize.col('mid')),sortType]];
-    if (sortField==="avgVolume")order =[[db.sequelize.fn('AVG', db.sequelize.col('volume')),sortType]];
+    if (sortField === "avgPrice") order = [[db.sequelize.fn('AVG', db.sequelize.col('mid')), sortType]];
+    if (sortField === "avgVolume") order = [[db.sequelize.fn('AVG', db.sequelize.col('volume')), sortType]];
     let TableData = await Promise.all((await RouteTable.findAll({
         offset: page * 11,
         limit: 11,
-        where:  {
+        where: {
             datecreate:
                 {
                     [Op.between]: [startDate, stopDate]
                 },
             name:
                 {
-                    [Op.in]:statesJson
+                    [Op.in]: statesJson
                 }
 
         },
@@ -195,20 +213,34 @@ exports.findAllAsyncFiltered = async (req, res) => {
                 where: {name: it.name}
             }
         ),
-        route:it.route.split(','),
-        pm:it.mid/it.mile,
+        route: it.route.split(','),
+        pm: it.mid / it.mile,
     })));
-    return res.status(200).json({TableData, total: await RouteTable.count()});
+
+    let counter = await Promise.all((
+
+        await RouteTable.count(
+            {
+                where: {
+                    datecreate:
+                        {
+                            [Op.between]: [startDate, stopDate]
+                        },
+                    name:
+                        {
+                            [Op.in]: statesJson
+                        }
+                }
+                , group: ['name']
+            }
+        )
+
+    ));
+
+    return res.status(200).json({
+        TableData,totalOne:counter.length, totalPages:Math.floor(counter.length/11)+1, curPage: page
+    });
 }
-
-
-
-
-
-
-
-
-
 
 
 // Retrieve all Tutorials from the database.
@@ -221,8 +253,6 @@ exports.findAll = (req, res) => {
             [Op.like]: `%${route}%`,
         }
     } : null;
-
-
 
 
     RouteTable.findAll({
