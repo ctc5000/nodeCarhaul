@@ -22,6 +22,7 @@ db.sequelize = sequelize;
 db.Trends = require("./trends.model.js")(sequelize, Sequelize);
 db.aformattable = require("./aformattable.model.js")(sequelize, Sequelize);
 db.Distance = require("./distace.model.js")(sequelize, Sequelize);
+db.DictionaryRoutes = require("./dictionaryRoutes.model.js")(sequelize, Sequelize);
 
 
 /*связи*/

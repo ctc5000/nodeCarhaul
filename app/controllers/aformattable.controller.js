@@ -2,12 +2,93 @@ const db = require("../models");
 const RouteTable = db.aformattable;
 const Distance = db.Distance;
 const Trends = db.Trends;
+const Dictionary = db.DictionaryRoutes;
 const Op = db.Sequelize.Op;
 
-// Create and Save a new Tutorial
-exports.create = (req, res) => {
+exports.createRowFormatTables = async (req, res) => {
+    console.log("True action insert data to main table");
+    if (!req.body.name) {
+        res.status(400).send({
+            message: "Content can not be empty!"
+        });
+        return;
+    }
+    const {
+        type,
+        name,
+        route,
+        low,
+        mid,
+        high,
+        mile,
+        volume,
+    } = req.body;
+const datecreate = new Date();
+let distid =0;
+let routeName = req.body.name.toString();
 
+   const state1 =  await Dictionary.findOne({
+            attributes:
+                [
+                    'value',
+                ],
+            where: {
+                name:  name.substring(0,2),
+            }
+        });
+   const state2 =
+        await Dictionary.findOne({
+        attributes:
+            [
+                'value',
+            ],
+        where: {
+            name:  name.substring(2,4),
+        }
+    });
+
+    let dist = await Promise.all((await Distance.findAll({
+        attributes: [
+            'id',
+        ],
+        where: {
+            name: [routeName],
+        }
+    })),
+
+    );
+    for (key in dist[0]['dataValues']) {
+        distid = dist[0]['dataValues'][key];
+    }
+        await RouteTable.build({
+        type:type,
+        name:name,
+        route:state1.value+','+state2.value,
+        datecreate:datecreate,
+        low:low,
+        mid:mid,
+        high:high,
+        mile:mile,
+        volume:volume,
+        distanceId:distid,
+        createdAt:new Date(),
+        updatedAt:new Date(),
+
+    }).save()
+        .then(data => {
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send({
+                message:
+                    err.message || "Some error occurred while creating the Tutorial."
+            });
+        });
 };
+
+
+
+
 
 exports.findAllTrendsAsync = async (req, res) => {
     console.log("True action findAllTrendsAsync");

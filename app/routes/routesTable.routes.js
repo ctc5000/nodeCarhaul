@@ -3,7 +3,7 @@ module.exports = app => {
 
     var router = require("express").Router();
 
-    router.post("/", routeTable.create);
+    router.post("/set", routeTable.createRowFormatTables);
 
     //Получить полные данные по таблице с параметрами
     router.get("/",  routeTable.findAllAsync);
