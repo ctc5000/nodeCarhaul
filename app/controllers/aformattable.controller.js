@@ -5,6 +5,10 @@ const Trends = db.Trends;
 const Dictionary = db.DictionaryRoutes;
 const Op = db.Sequelize.Op;
 
+
+/*
+* Создание записи таблицы
+*/
 exports.createRowFormatTables = async (req, res) => {
     console.log("True action insert data to main table");
     if (!req.body.name) {
@@ -89,7 +93,9 @@ let routeName = req.body.name.toString();
 
 
 
-
+/*
+* Поиск трендов по шатату
+*/
 exports.findAllTrendsAsync = async (req, res) => {
     console.log("True action findAllTrendsAsync");
     const
@@ -113,7 +119,9 @@ exports.findAllTrendsAsync = async (req, res) => {
 }
 
 
-//Получить данные по направлению
+/*
+* Получить данные по направлению
+*/
 exports.GetDetail = async (req, res) => {
     let dateStart = new Date();
     dateStart.setDate(dateStart.getDate() - 7);
@@ -200,7 +208,9 @@ exports.GetDetail = async (req, res) => {
     return res.status(200).json({Deatail, GraphPoints: GraphPoints});
 }
 
-//Получить полные данные по таблице с параметрами
+/*
+* Получить полные данные по таблице с параметрами
+*/
 exports.findAllAsync = async (req, res) => {
     console.log("True action findAllAsync");
     let dateStart = new Date();
@@ -221,7 +231,27 @@ exports.findAllAsync = async (req, res) => {
 
     if (sortField === "avgPrice") order = [[db.sequelize.fn('AVG', db.sequelize.col('mid')), sortType]];
     if (sortField === "avgVolume") order = [[db.sequelize.fn('AVG', db.sequelize.col('volume')), sortType]];
-    let TableData = await Promise.all((await RouteTable.findAll({
+
+    if (sortField === "trends")
+    {
+        let TrendsData = await Promise.all((await Trends.findAll({
+            offset: page * 11,
+            limit: 11,
+            where: {
+                intervaldate: 30,
+                value: {
+                    [Op.ne]: null
+                }
+            },
+
+            order:[ ['value', sortType]]
+        })));
+
+        return res.status(200).json({ TrendsData });
+    }
+
+
+        let TableData = await Promise.all((await RouteTable.findAll({
         offset: page * 11,
         limit: 11,
         where: {
@@ -303,7 +333,18 @@ exports.findAllAsync = async (req, res) => {
                         {
                             [Op.between]: [startDate, stopDate]
                         },
-                }
+                },
+                include: [{// Notice `include` takes an ARRAY
+                    model: Distance,
+                    as: 'Distances',
+                    attributes: ['distance'],
+                    where: {
+                        distance:
+                            {
+                                [Op.between]: [minMiles, maxMiles]
+                            }
+                    }
+                }]
                 , group: ['name']
             }
         )
@@ -314,7 +355,10 @@ exports.findAllAsync = async (req, res) => {
         TableData, totalOne: counter.length, totalPages: Math.floor(counter.length / 11) + 1, curPage: page
     });
 }
-//Получить полные данные по таблице с параметрами и фильтром
+
+/*
+* Получить полные данные по таблице с параметрами и фильтром
+*/
 exports.findAllAsyncFiltered = async (req, res) => {
     console.log("True action findAllAsyncFiltered");
     let dateStart = new Date();
@@ -441,38 +485,3 @@ exports.findAllAsyncFiltered = async (req, res) => {
     });
 }
 
-
-// Find a single Tutorial with an id
-exports.findOne = (req, res) => {
-    const id = req.params.id;
-
-    RouteTable.findByPk(id)
-        .then(data => {
-            res.send(data);
-        })
-        .catch(err => {
-            res.status(500).send({
-                message: "Error retrieving Tutorial with id=" + id
-            });
-        });
-};
-
-// Update a Tutorial by the id in the request
-exports.update = (req, res) => {
-
-};
-
-// Delete a Tutorial with the specified id in the request
-exports.delete = (req, res) => {
-
-};
-
-// Delete all Tutorials from the database.
-exports.deleteAll = (req, res) => {
-
-};
-
-// Find all published Tutorials
-exports.findAllPublished = (req, res) => {
-
-};

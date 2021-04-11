@@ -17,15 +17,7 @@ module.exports = app => {
     //Получить данные по направлению
     router.get("/trends",  routeTable.findAllTrendsAsync);
 
-    router.get("/published", routeTable.findAllPublished);
 
-    router.get("/:id", routeTable.findOne);
-
-    router.put("/:id", routeTable.update);
-
-    router.delete("/:id", routeTable.delete);
-
-    router.delete("/", routeTable.deleteAll);
 
     app.use('/api/routesTable', router);
 };
