@@ -16,6 +16,8 @@ module.exports = app => {
 
     //Получить данные по направлению
     router.get("/trends",  routeTable.findAllTrendsAsync);
+    //Получить рекомендации  по направлению
+    router.get("/detailRayt",  routeTable.findAllDetailAsyncFiltered);
 
 
 
