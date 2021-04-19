@@ -507,40 +507,34 @@ exports.findAllAsyncFiltered = async (req, res) => {
 /*Получить 5 записей с рекомендациями по направлению*/
 exports.findAllDetailAsyncFiltered = async (req, res) => {
     console.log("True action findAllAsyncFilteredDetail");
-    let dateStart = new Date();
-    dateStart.setDate(dateStart.getDate() - 7);
     let {
-        page,
-        order = "name",
-        minMiles = 0,
-        maxMiles = 10000,
-        sortField = "name",
-        sortType = "ASC",
-        startDate = dateStart,
-        stopDate = new Date(),
-        states = ["ALAR"]
+        state = "AL"
     } = req.query;
-    if (states.length === 1) {
-        return res.status(500).json('null parse data');
-    }
-
-    let statesJson = JSON.parse(states);
 
 
-    order = [[sortField, sortType]];
-    if (sortField === "avgPrice") order = [[db.sequelize.fn('AVG', db.sequelize.col('mid')), sortType]];
-    if (sortField === "avgVolume") order = [[db.sequelize.fn('AVG', db.sequelize.col('volume')), sortType]];
-    let TableData = await Promise.all((await RouteTable.findAll({
-        offset: page * 5,
+    let TableData = await Promise.all((await Dictionary.findAll({
+        attributes: ['name']
+    })).map(async (it) => ({
+        ...(it.toJSON()),
+        name: state + it.name,
+    })));
+    let order = [["mid", 'DESC']];
+
+    let ArrNames = [];
+    TableData.forEach(function (item) {
+        ArrNames.push(item.name);
+    });
+
+    console.log(ArrNames);
+    let DataTable = await Promise.all((
+
+        await RouteTable.findAll({
+        offset: 0,
         limit: 5,
         where: {
-            datecreate:
-                {
-                    [Op.between]: [startDate, stopDate]
-                },
             name:
                 {
-                    [Op.in]: statesJson
+                    [Op.in]: ArrNames
                 }
 
         },
@@ -561,7 +555,7 @@ exports.findAllDetailAsyncFiltered = async (req, res) => {
             where: {
                 distance:
                     {
-                        [Op.between]: [minMiles, maxMiles]
+                        [Op.between]: [0, 10000]
                     }
             }
         }],
@@ -574,8 +568,6 @@ exports.findAllDetailAsyncFiltered = async (req, res) => {
                 attributes: [
                     [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgAllPrice"],
                     [db.sequelize.fn('AVG', db.sequelize.col('volume')), "avgAllVollume"],
-                    //   [db.sequelize.literal('(100*(avg(aformattable.mid)-(SELECT avg(a.mid) FROM `aformattables` a where a.name = aformattable.name))/(SELECT avg(a.mid) FROM `aformattables` a where a.name = aformattable.name)) '),'PriceProcent'],
-                    //  [db.sequelize.literal('(100*(avg(aformattable.volume)-(SELECT avg(a.volume) FROM `aformattables` a where a.name = aformattable.name)) /(SELECT avg(a.volume) FROM `aformattables` a where a.name = aformattable.name)) '),'VollumeProcent']
                 ],
                 where: {name: it.name}
             }
@@ -618,28 +610,8 @@ exports.findAllDetailAsyncFiltered = async (req, res) => {
             })
     })));
 
-    let counter = await Promise.all((
-
-        await RouteTable.count(
-            {
-                where: {
-                    datecreate:
-                        {
-                            [Op.between]: [startDate, stopDate]
-                        },
-                    name:
-                        {
-                            [Op.in]: statesJson
-                        }
-                }
-                , group: ['name']
-            }
-        )
-
-    ));
-
     return res.status(200).json({
-        TableData, totalOne: counter.length, totalPages: Math.floor(counter.length / 11) + 1, curPage: page
+        DataTable
     });
 }
 
