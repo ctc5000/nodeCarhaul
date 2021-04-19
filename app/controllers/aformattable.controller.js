@@ -227,7 +227,7 @@ exports.findAllAsync = async (req, res) => {
     if (sortField === "avgPrice") order = [[db.sequelize.fn('AVG', db.sequelize.col('mid')), sortType]];
     if (sortField === "avgVolume") order = [[db.sequelize.fn('AVG', db.sequelize.col('volume')), sortType]];
 
-    if (sortField === "trends") {
+   /* if (sortField === "trends") {
         let TrendsData = await Promise.all((await Trends.findAll({
             offset: page * 11,
             limit: 11,
@@ -242,7 +242,7 @@ exports.findAllAsync = async (req, res) => {
         })));
 
         return res.status(200).json({TrendsData});
-    }
+    }*/
 
 
     let TableData = await Promise.all((await RouteTable.findAll({
@@ -325,7 +325,8 @@ exports.findAllAsync = async (req, res) => {
                 where: {
                     ToState: it.name.substring(2, 4),
                 }
-            })
+            }),
+        profit:(8 * it.mid) - ((it.Distances.distance / 6.5) * 2.6),
 
 
     })));
@@ -475,7 +476,8 @@ exports.findAllAsyncFiltered = async (req, res) => {
                 where: {
                     ToState: it.name.substring(2, 4),
                 }
-            })
+            }),
+        profit:(8 * it.mid) - ((it.Distances.distance / 6.5) * 2.6),
     })));
 
     let counter = await Promise.all((
@@ -607,7 +609,8 @@ exports.findAllDetailAsyncFiltered = async (req, res) => {
                 where: {
                     ToState: it.name.substring(2, 4),
                 }
-            })
+            }),
+        profit:(8 * it.mid) - ((it.Distances.distance / 6.5) * 2.6),
     })));
 
     return res.status(200).json({
