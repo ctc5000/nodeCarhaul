@@ -145,7 +145,7 @@ exports.GetDetail = async (req, res) => {
         },
         group: ['datecreate'],
     })));
-
+    GraphPoints= GraphPoints.reverse();
 
     let Deatail = await Promise.all((await RouteTable.findAll({
             attributes: [
@@ -227,22 +227,129 @@ exports.findAllAsync = async (req, res) => {
     if (sortField === "avgPrice") order = [[db.sequelize.fn('AVG', db.sequelize.col('mid')), sortType]];
     if (sortField === "avgVolume") order = [[db.sequelize.fn('AVG', db.sequelize.col('volume')), sortType]];
 
-   /* if (sortField === "trends") {
+    if (sortField === "trends") {
         let TrendsData = await Promise.all((await Trends.findAll({
             offset: page * 11,
             limit: 11,
             where: {
                 intervaldate: 30,
                 value: {
-                    [Op.ne]: null
+                    [Op.ne]: 0
                 }
             },
 
-            order: [['value', sortType]]
+            order: [['value', 'DESC']]
+        })));
+        let ArrNames = [], ArrRouteNames = [];
+        TrendsData.forEach(function (item) {
+            ArrNames.push(item.namestate);
+        });
+        let DictionaryData = await Promise.all((await Dictionary.findAll({
+            attributes: ['name']
+        })));
+        ArrNames.forEach(function (item1) {
+            DictionaryData.forEach(function (item2) {
+                ArrRouteNames.push(item1 + "" + item2.name);
+
+            });
+
+        });
+
+        let TableDataByTrends = await Promise.all((await RouteTable.findAll({
+            offset: page * 11,
+            limit: 11,
+            where: {
+                datecreate:
+                    {
+                        [Op.between]: [startDate, stopDate]
+                    },
+                name:
+                    {
+                        [Op.in]: ArrRouteNames
+                    }
+            },
+            attributes: [
+                'id',
+                'name',
+                'mile',
+                'route',
+                'mid',
+                'volume',
+                [db.sequelize.fn('AVG', db.sequelize.col('volume')), 'avgVolume'],
+                [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgPrice"],
+            ],
+            include: [{// Notice `include` takes an ARRAY
+                model: Distance,
+                as: 'Distances',
+                attributes: ['distance'],
+                where: {
+                    distance:
+                        {
+                            [Op.between]: [minMiles, maxMiles]
+                        }
+                }
+            }],
+            group: ['name'],
+        })).map(async (it) => ({
+            ...(it.toJSON()),
+            addParams: await RouteTable.findAll(
+                {
+                    attributes: [
+                        [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgAllPrice"],
+                        [db.sequelize.fn('AVG', db.sequelize.col('volume')), "avgAllVollume"],
+                        //   [db.sequelize.literal('(100*(avg(aformattable.mid)-(SELECT avg(a.mid) FROM `aformattables` a where a.name = aformattable.name))/(SELECT avg(a.mid) FROM `aformattables` a where a.name = aformattable.name)) '),'PriceProcent'],
+                        //  [db.sequelize.literal('(100*(avg(aformattable.volume)-(SELECT avg(a.volume) FROM `aformattables` a where a.name = aformattable.name)) /(SELECT avg(a.volume) FROM `aformattables` a where a.name = aformattable.name)) '),'VollumeProcent']
+                    ],
+                    where: {name: it.name}
+                }
+            ),
+            route: it.route.split(','),
+            pm: it.mid / it.mile,
+            trend1:
+                await Trends.findOne({
+                    attributes:
+                        [
+                            'value',
+                        ],
+                    where: {
+                        namestate: it.name.substring(0, 2),
+                        intervaldate: 30,
+                    }
+                }),
+            trend2:
+                await Trends.findOne({
+                    attributes:
+                        [
+                            'value',
+                        ],
+                    where: {
+                        namestate: it.name.substring(2, 4),
+                        intervaldate: 30,
+                    }
+                }),
+            city1:
+                await CitiesRoutes.findOne({
+                    where: {
+                        FromState: it.name.substring(0, 2),
+                    }
+                }),
+            city2:
+                await CitiesRoutes.findOne({
+                    where: {
+                        ToState: it.name.substring(2, 4),
+                    }
+                }),
+            profit: (8 * it.mid) - ((it.Distances.distance / 6.5) * 2.6),
+
+
         })));
 
-        return res.status(200).json({TrendsData});
-    }*/
+
+
+        return res.status(200).json({
+            TableDataByTrends
+        });
+    }
 
 
     let TableData = await Promise.all((await RouteTable.findAll({
@@ -326,7 +433,7 @@ exports.findAllAsync = async (req, res) => {
                     ToState: it.name.substring(2, 4),
                 }
             }),
-        profit:(8 * it.mid) - ((it.Distances.distance / 6.5) * 2.6),
+        profit: (8 * it.mid) - ((it.Distances.distance / 6.5) * 2.6),
 
 
     })));
@@ -477,7 +584,7 @@ exports.findAllAsyncFiltered = async (req, res) => {
                     ToState: it.name.substring(2, 4),
                 }
             }),
-        profit:(8 * it.mid) - ((it.Distances.distance / 6.5) * 2.6),
+        profit: (8 * it.mid) - ((it.Distances.distance / 6.5) * 2.6),
     })));
 
     let counter = await Promise.all((
@@ -531,39 +638,39 @@ exports.findAllDetailAsyncFiltered = async (req, res) => {
     let DataTable = await Promise.all((
 
         await RouteTable.findAll({
-        offset: 0,
-        limit: 5,
-        where: {
-            name:
-                {
-                    [Op.in]: ArrNames
-                }
-
-        },
-        attributes: [
-            'id',
-            'name',
-            'mile',
-            'route',
-            'mid',
-            'volume',
-            [db.sequelize.fn('AVG', db.sequelize.col('volume')), 'avgVolume'],
-            [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgPrice"],
-        ],
-        include: [{// Notice `include` takes an ARRAY
-            model: Distance,
-            as: 'Distances',
-            attributes: ['distance'],
+            offset: 0,
+            limit: 5,
             where: {
-                distance:
+                name:
                     {
-                        [Op.between]: [0, 10000]
+                        [Op.in]: ArrNames
                     }
-            }
-        }],
-        group: ['name'],
-        order: order
-    })).map(async (it) => ({
+
+            },
+            attributes: [
+                'id',
+                'name',
+                'mile',
+                'route',
+                'mid',
+                'volume',
+                [db.sequelize.fn('AVG', db.sequelize.col('volume')), 'avgVolume'],
+                [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgPrice"],
+            ],
+            include: [{// Notice `include` takes an ARRAY
+                model: Distance,
+                as: 'Distances',
+                attributes: ['distance'],
+                where: {
+                    distance:
+                        {
+                            [Op.between]: [0, 10000]
+                        }
+                }
+            }],
+            group: ['name'],
+            order: order
+        })).map(async (it) => ({
         ...(it.toJSON()),
         addParams: await RouteTable.findAll(
             {
@@ -610,7 +717,7 @@ exports.findAllDetailAsyncFiltered = async (req, res) => {
                     ToState: it.name.substring(2, 4),
                 }
             }),
-        profit:(8 * it.mid) - ((it.Distances.distance / 6.5) * 2.6),
+        profit: (8 * it.mid) - ((it.Distances.distance / 6.5) * 2.6),
     })));
 
     return res.status(200).json({
