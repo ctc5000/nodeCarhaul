@@ -265,8 +265,6 @@ exports.findAllAsync = async (req, res) => {
         },
     };
 
-    console.log("+++++++++++++++++++++++++++++"+states );
-
     if (states.length === 1 || states==="[]") {
         //return res.status(500).json('null parse data');
     }
@@ -501,12 +499,7 @@ exports.findAllAsync = async (req, res) => {
 
         await RouteTable.count(
             {
-                where: {
-                    datecreate:
-                        {
-                            [Op.between]: [startDate, stopDate]
-                        },
-                },
+                where,
                 include: [{// Notice `include` takes an ARRAY
                     model: Distance,
                     as: 'Distances',
