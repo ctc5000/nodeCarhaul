@@ -5,8 +5,42 @@ const Trends = db.Trends;
 const Dictionary = db.DictionaryRoutes;
 const CitiesRoutes = db.CitiesRoutes;
 const Op = db.Sequelize.Op;
-
-
+const operatorsAliases = {
+    $eq: Op.eq,
+    $ne: Op.ne,
+    $gte: Op.gte,
+    $gt: Op.gt,
+    $lte: Op.lte,
+    $lt: Op.lt,
+    $not: Op.not,
+    $in: Op.in,
+    $notIn: Op.notIn,
+    $is: Op.is,
+    $like: Op.like,
+    $notLike: Op.notLike,
+    $iLike: Op.iLike,
+    $notILike: Op.notILike,
+    $regexp: Op.regexp,
+    $notRegexp: Op.notRegexp,
+    $iRegexp: Op.iRegexp,
+    $notIRegexp: Op.notIRegexp,
+    $between: Op.between,
+    $notBetween: Op.notBetween,
+    $overlap: Op.overlap,
+    $contains: Op.contains,
+    $contained: Op.contained,
+    $adjacent: Op.adjacent,
+    $strictLeft: Op.strictLeft,
+    $strictRight: Op.strictRight,
+    $noExtendRight: Op.noExtendRight,
+    $noExtendLeft: Op.noExtendLeft,
+    $and: Op.and,
+    $or: Op.or,
+    $any: Op.any,
+    $all: Op.all,
+    $values: Op.values,
+    $col: Op.col
+};
 /*
 * Создание записи таблицы
 */
@@ -219,7 +253,41 @@ exports.findAllAsync = async (req, res) => {
         sortType = "ASC",
         startDate = dateStart,
         stopDate = new Date(),
+        states = ["ALAR"]
     } = req.query;
+    let statesJson = "";
+
+
+    let where =  {
+        datecreate:
+        {
+            [Op.between]: [startDate, stopDate]
+        },
+    }
+
+    // if (name.length > 0)
+    //     where.$and.push({name: {$iLike: `%${name.trim()}%`}});
+    // if (Array.isArray(DealerIds)) {
+    //     where.$and.push({id: {$in: DealerIds}});
+    //     where.$and.push({status: 'active'});
+    // }
+
+
+
+
+
+
+    if (states.length === 1) {
+        //return res.status(500).json('null parse data');
+    }
+    else
+    {
+        statesJson = JSON.parse(states);
+        where.name =  {[Op.in]: statesJson};
+
+    }
+
+
 
 
     order = [[sortField, sortType]];
@@ -355,12 +423,13 @@ exports.findAllAsync = async (req, res) => {
     let TableData = await Promise.all((await RouteTable.findAll({
         offset: page * 11,
         limit: 11,
-        where: {
+        where,
+     /*   where: {
             datecreate:
                 {
                     [Op.between]: [startDate, stopDate]
                 },
-        },
+        },*/
         attributes: [
             'id',
             'name',
