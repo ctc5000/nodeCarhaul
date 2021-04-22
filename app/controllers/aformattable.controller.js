@@ -263,21 +263,11 @@ exports.findAllAsync = async (req, res) => {
         {
             [Op.between]: [startDate, stopDate]
         },
-    }
+    };
 
-    // if (name.length > 0)
-    //     where.$and.push({name: {$iLike: `%${name.trim()}%`}});
-    // if (Array.isArray(DealerIds)) {
-    //     where.$and.push({id: {$in: DealerIds}});
-    //     where.$and.push({status: 'active'});
-    // }
+    console.log("+++++++++++++++++++++++++++++"+states );
 
-
-
-
-
-
-    if (states.length === 1) {
+    if (states.length === 1 || states==="[]") {
         //return res.status(500).json('null parse data');
     }
     else
