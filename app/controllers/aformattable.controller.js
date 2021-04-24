@@ -41,6 +41,7 @@ const operatorsAliases = {
     $values: Op.values,
     $col: Op.col
 };
+let TryThis;
 /*
 * Создание записи таблицы
 */
@@ -52,20 +53,31 @@ exports.createRowFormatTables = async (req, res) => {
         });
         return;
     }
-    const {
-        type,
-        name,
-        route,
-        low,
-        mid,
-        high,
-        mile,
-        volume,
+    let {
+         name,
     } = req.body;
+
+    let type=0,
+        low=0,
+        mid=0,
+        high=0,
+        mile=0,
+        volume=0;
+
+    let splitedBody = name.split(",");
+    name =splitedBody[0];
+    type = splitedBody[1];
+    low = splitedBody[2];
+    mid = splitedBody[3];
+    high = splitedBody[4];
+    volume = splitedBody[5];
+    mile = splitedBody[6];
+
+    console.log(req.body);
     const datecreate = new Date();
     let distid = 0;
-    let routeName = req.body.name.toString();
-
+    let routeName = name;
+console.log(routeName+"+++++++++++++++++++++++++++++++++++");
     const state1 = await Dictionary.findOne({
         attributes:
             [
