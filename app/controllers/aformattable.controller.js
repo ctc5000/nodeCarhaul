@@ -77,7 +77,6 @@ exports.createRowFormatTables = async (req, res) => {
     const datecreate = new Date();
     let distid = 0;
     let routeName = name;
-console.log(routeName+"+++++++++++++++++++++++++++++++++++");
     const state1 = await Dictionary.findOne({
         attributes:
             [
@@ -680,8 +679,12 @@ exports.findAllAsyncFiltered = async (req, res) => {
 /*Получить 5 записей с рекомендациями по направлению*/
 exports.findAllDetailAsyncFiltered = async (req, res) => {
     console.log("True action findAllAsyncFilteredDetail");
+    let dateStart = new Date();
     let {
-        state = "AL"
+        state = "AL",
+        startDate = dateStart,
+        stopDate = new Date(),
+
     } = req.query;
 
 
@@ -708,7 +711,11 @@ exports.findAllDetailAsyncFiltered = async (req, res) => {
                 name:
                     {
                         [Op.in]: ArrNames
-                    }
+                    },
+                datecreate:
+                    {
+                        [Op.between]: [startDate, stopDate]
+                    },
 
             },
             attributes: [
