@@ -796,3 +796,28 @@ exports.findAllDetailAsyncFiltered = async (req, res) => {
     });
 }
 
+
+
+exports.findCityes = async (req,res)=>
+{
+    let {state = "AL-AR"} = req.query;
+
+    let TableData = await CitiesRoutes.findOne({
+        attributes:["FromCity"],
+        where :{
+            FromState: state.substring(0, 2),
+        }
+    });
+    let TableData2 = await CitiesRoutes.findOne({
+        attributes:["FromCity"],
+        where :{
+            FromState: state.substring(3, 5),
+        }
+    });
+    let str = TableData["FromCity"] +'-'+TableData2["FromCity"];
+        return res.status(200).json({
+            str
+});
+}
+
+

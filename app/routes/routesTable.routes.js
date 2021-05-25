@@ -18,6 +18,8 @@ module.exports = app => {
     router.get("/trends",  routeTable.findAllTrendsAsync);
     //Получить рекомендации  по направлению
     router.get("/detailRayt",  routeTable.findAllDetailAsyncFiltered);
+    //Получить города
+    router.get("/cityes",  routeTable.findCityes);
 
 
 
