@@ -41,7 +41,7 @@ const operatorsAliases = {
     $values: Op.values,
     $col: Op.col
 };
-let TryThis;
+
 /*
 * Создание записи таблицы
 */
@@ -53,24 +53,15 @@ exports.createRowFormatTables = async (req, res) => {
         });
         return;
     }
-    let {
-         name,
-    } = req.body;
 
-    let type=0,
-        low=0,
-        mid=0,
-        high=0,
-        mile=0,
-        volume=0;
 
-    let splitedBody = name.split(",");
-    name =splitedBody[0];
-    type = splitedBody[1];
-    low = splitedBody[2];
-    mid = splitedBody[3];
-    high = splitedBody[4];
-    volume = splitedBody[5];
+    let splitedBody = name.split(","),
+    name = splitedBody[0],
+    type = splitedBody[1],
+    low = splitedBody[2],
+    mid = splitedBody[3],
+    high = splitedBody[4],
+    volume = splitedBody[5],
     mile = splitedBody[6];
 
     console.log(req.body);
@@ -106,7 +97,7 @@ exports.createRowFormatTables = async (req, res) => {
             }
         })),
     );
-    for (key in dist[0]['dataValues']) {
+    for (let key in dist[0]['dataValues']) {
         distid = dist[0]['dataValues'][key];
     }
     await RouteTable.build({
@@ -139,26 +130,16 @@ exports.createRowFormatTables = async (req, res) => {
 /*
 * Поиск трендов по шатату
 */
-exports.findAllTrendsAsync = async (req, res) => {
+exports.findAllTrendsAsync = async ({query: {namestate}}, res) => {
     console.log("True action findAllTrendsAsync");
-    const
-        {
-            namestate
-        } = req.query;
-    let TrendsReturn = await Promise.all((await Trends.findAll({
-        attributes:
-            [
-                'value',
-            ],
-        where: {
-            namestate: [namestate],
-            intervaldate: 30,
-        }
-    })));
-
-    return res.status(200).json({
-        TrendsReturn
-    });
+    const where = {intervaldate: 30};
+    if (!!namestate) {
+        where.namestate = namestate;
+    }
+    return res.status(200).json(await Trends.findAll({
+        attributes: ['value'],
+        where
+    }));
 }
 
 
@@ -175,7 +156,7 @@ exports.GetDetail = async (req, res) => {
             stopDate = new Date(),
         } = req.query;
 
-    let GraphPoints = await Promise.all((await RouteTable.findAll({
+    let GraphPoints = await RouteTable.findAll({
         attributes: [
             ['mid', 'price'],
             'volume',
@@ -189,10 +170,10 @@ exports.GetDetail = async (req, res) => {
                 },
         },
         group: ['datecreate'],
-    })));
-    GraphPoints= GraphPoints.reverse();
+        order:[['datecreate', 'DESC']]
+    });
 
-    let Deatail = await Promise.all((await RouteTable.findAll({
+    let Deatail = await RouteTable.findAll({
             attributes: [
                 'id',
                 'name',
@@ -202,6 +183,11 @@ exports.GetDetail = async (req, res) => {
                 'volume',
                 [db.sequelize.fn('AVG', db.sequelize.col('volume')), 'avgVolume'],
                 [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgPrice"],
+                [db.sequelize.literal(`(SELECT value FROM trendsparams AS ts 
+                    WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(RouteTable.name,1,2))`), 'trend1'],
+                [db.sequelize.literal(`(SELECT value FROM trendsparams AS ts 
+                    WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(RouteTable.name,3,2))`), 'trend1'],
+
             ],
             where: {
                 name: routeName,
@@ -216,35 +202,8 @@ exports.GetDetail = async (req, res) => {
                 attributes: ['distance'],
             }],
             group: ['name'],
-
-        })).map(async (it) => ({
-            ...(it.toJSON()),
-            trend1:
-                await Trends.findOne({
-                    attributes:
-                        [
-                            'value',
-                        ],
-                    where: {
-                        namestate: it.name.substring(0, 2),
-                        intervaldate: 30,
-                    }
-                }),
-            trend2:
-                await Trends.findOne({
-                    attributes:
-                        [
-                            'value',
-                        ],
-                    where: {
-                        namestate: it.name.substring(2, 4),
-                        intervaldate: 30,
-                    }
-                }),
-
-
-        }))
-    )
+            logging: console.log,
+        })
     return res.status(200).json({Deatail, GraphPoints: GraphPoints});
 }
 
@@ -269,24 +228,20 @@ exports.findAllAsync = async (req, res) => {
     let statesJson = "";
 
 
-    let where =  {
+    let where = {
         datecreate:
-        {
-            [Op.between]: [startDate, stopDate]
-        },
+            {
+                [Op.between]: [startDate, stopDate]
+            },
     };
 
-    if (states.length === 1 || states==="[]") {
+    if (states.length === 1 || states === "[]") {
         //return res.status(500).json('null parse data');
-    }
-    else
-    {
+    } else {
         statesJson = JSON.parse(states);
-        where.name =  {[Op.in]: statesJson};
+        where.name = {[Op.in]: statesJson};
 
     }
-
-
 
 
     order = [[sortField, sortType]];
@@ -295,7 +250,7 @@ exports.findAllAsync = async (req, res) => {
     if (sortField === "avgVolume") order = [[db.sequelize.fn('AVG', db.sequelize.col('volume')), sortType]];
 
     if (sortField === "trends") {
-        let TrendsData = await Promise.all((await Trends.findAll({
+        let TrendsData = await Trends.findAll({
             offset: page * 11,
             limit: 11,
             where: {
@@ -306,14 +261,14 @@ exports.findAllAsync = async (req, res) => {
             },
 
             order: [['value', 'DESC']]
-        })));
+        });
         let ArrNames = [], ArrRouteNames = [];
         TrendsData.forEach(function (item) {
             ArrNames.push(item.namestate);
         });
-        let DictionaryData = await Promise.all((await Dictionary.findAll({
+        let DictionaryData = await Dictionary.findAll({
             attributes: ['name']
-        })));
+        });
         ArrNames.forEach(function (item1) {
             DictionaryData.forEach(function (item2) {
                 ArrRouteNames.push(item1 + "" + item2.name);
@@ -412,7 +367,6 @@ exports.findAllAsync = async (req, res) => {
         })));
 
 
-
         return res.status(200).json({
             TableDataByTrends
         });
@@ -423,12 +377,12 @@ exports.findAllAsync = async (req, res) => {
         offset: page * 11,
         limit: 11,
         where,
-     /*   where: {
-            datecreate:
-                {
-                    [Op.between]: [startDate, stopDate]
-                },
-        },*/
+        /*   where: {
+               datecreate:
+                   {
+                       [Op.between]: [startDate, stopDate]
+                   },
+           },*/
         attributes: [
             'id',
             'name',
@@ -797,27 +751,25 @@ exports.findAllDetailAsyncFiltered = async (req, res) => {
 }
 
 
-
-exports.findCityes = async (req,res)=>
-{
+exports.findCityes = async (req, res) => {
     let {state = "AL-AR"} = req.query;
 
     let TableData = await CitiesRoutes.findOne({
-        attributes:["FromCity"],
-        where :{
+        attributes: ["FromCity"],
+        where: {
             FromState: state.substring(0, 2),
         }
     });
     let TableData2 = await CitiesRoutes.findOne({
-        attributes:["FromCity"],
-        where :{
+        attributes: ["FromCity"],
+        where: {
             FromState: state.substring(3, 5),
         }
     });
-    let str = TableData["FromCity"] +'-'+TableData2["FromCity"];
-        return res.status(200).json({
-            str
-});
+    let str = TableData["FromCity"] + '-' + TableData2["FromCity"];
+    return res.status(200).json({
+        str
+    });
 }
 
 
