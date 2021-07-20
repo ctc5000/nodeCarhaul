@@ -184,9 +184,9 @@ exports.GetDetail = async (req, res) => {
                 [db.sequelize.fn('AVG', db.sequelize.col('volume')), 'avgVolume'],
                 [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgPrice"],
                 [db.sequelize.literal(`(SELECT value FROM trendsparams AS ts 
-                    WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(RouteTable.name,1,2))`), 'trend1'],
+                    WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(\`aformattable\`.\`name\`,1,2))`), 'trend1'],
                 [db.sequelize.literal(`(SELECT value FROM trendsparams AS ts 
-                    WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(RouteTable.name,3,2))`), 'trend1'],
+                    WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(\`aformattable\`.\`name\`,3,2))`), 'trend1'],
 
             ],
             where: {
