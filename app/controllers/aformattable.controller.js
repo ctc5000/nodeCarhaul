@@ -56,13 +56,13 @@ exports.createRowFormatTables = async (req, res) => {
 
 
     let splitedBody = name.split(","),
-    name = splitedBody[0],
-    type = splitedBody[1],
-    low = splitedBody[2],
-    mid = splitedBody[3],
-    high = splitedBody[4],
-    volume = splitedBody[5],
-    mile = splitedBody[6];
+        name = splitedBody[0],
+        type = splitedBody[1],
+        low = splitedBody[2],
+        mid = splitedBody[3],
+        high = splitedBody[4],
+        volume = splitedBody[5],
+        mile = splitedBody[6];
 
     console.log(req.body);
     const datecreate = new Date();
@@ -146,34 +146,21 @@ exports.findAllTrendsAsync = async ({query: {namestate}}, res) => {
 /*
 * Получить данные по направлению
 */
-exports.GetDetail = async (req, res) => {
-    let dateStart = new Date();
-    dateStart.setDate(dateStart.getDate() - 7);
-    const
-        {
-            routeName,
-            startDate = dateStart,
-            stopDate = new Date(),
-        } = req.query;
-
-    let GraphPoints = await RouteTable.findAll({
-        attributes: [
-            ['mid', 'price'],
-            'volume',
-            'datecreate',
-        ],
-        where: {
-            name: routeName,
-            datecreate:
-                {
-                    [Op.between]: [startDate, stopDate]
-                },
-        },
-        group: ['datecreate'],
-        order:[['datecreate', 'DESC']]
-    });
-
-    let Deatail = await RouteTable.findAll({
+exports.GetDetail = async ({query: {routeName, startDate, stopDate}}, res) => {
+    if (!routeName) {
+        res.status(400).send({
+            message: "Route Name can not be empty!"
+        });
+    }
+    if (!startDate) {
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 7);
+    }
+    if (!stopDate) {
+        stopDate = new Date();
+    }
+    return res.status(200).json({
+        Deatail: await RouteTable.findAll({
             attributes: [
                 'id',
                 'name',
@@ -186,7 +173,7 @@ exports.GetDetail = async (req, res) => {
                 [db.sequelize.literal(`(SELECT value FROM trendsparams AS ts 
                     WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(\`aformattable\`.\`name\`,1,2))`), 'trend1'],
                 [db.sequelize.literal(`(SELECT value FROM trendsparams AS ts 
-                    WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(\`aformattable\`.\`name\`,3,2))`), 'trend1'],
+                    WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(\`aformattable\`.\`name\`,3,2))`), 'trend2'],
 
             ],
             where: {
@@ -202,53 +189,75 @@ exports.GetDetail = async (req, res) => {
                 attributes: ['distance'],
             }],
             group: ['name'],
-            logging: console.log,
+        }),
+        GraphPoints: await RouteTable.findAll({
+            attributes: [
+                ['mid', 'price'],
+                'volume',
+                'datecreate',
+            ],
+            where: {
+                name: routeName,
+                datecreate:
+                    {
+                        [Op.between]: [startDate, stopDate]
+                    },
+            },
+            group: ['datecreate'],
+            order: [['datecreate', 'DESC']]
         })
-    return res.status(200).json({Deatail, GraphPoints: GraphPoints});
+    });
 }
 
 /*
 * Получить полные данные по таблице с параметрами
 */
-exports.findAllAsync = async (req, res) => {
+exports.findAllAsync = async ({
+                                  query: {
+                                      page,
+                                      count = 11,
+                                      minMiles = 0,
+                                      maxMiles = 10000,
+                                      sortField,
+                                      sortType = "ASC",
+                                      startDate,
+                                      stopDate,
+                                      states = ["ALAR"]
+                                  }
+                              }, res) => {
     console.log("True action findAllAsync");
-    let dateStart = new Date();
-    dateStart.setDate(dateStart.getDate() - 7);
-    let {
-        page,
-        order = "name",
-        minMiles = 0,
-        maxMiles = 10000,
-        sortField = "name",
-        sortType = "ASC",
-        startDate = dateStart,
-        stopDate = new Date(),
-        states = ["ALAR"]
-    } = req.query;
+    if (!startDate) {
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 7);
+    }
+    if (!stopDate) {
+        stopDate = new Date();
+    }
+
     let statesJson = "";
-
-
     let where = {
-        datecreate:
-            {
-                [Op.between]: [startDate, stopDate]
-            },
+        datecreate: {[Op.between]: [startDate, stopDate]},
     };
 
-    if (states.length === 1 || states === "[]") {
-        //return res.status(500).json('null parse data');
-    } else {
+    if (states.length > 1 && states !== "[]") {
         statesJson = JSON.parse(states);
         where.name = {[Op.in]: statesJson};
+    }
 
+    let order = [["name", "ASC"]],
+    sorts = {
+        name: [["name", "ASC"]],
+        avgPrice: [[db.sequelize.fn('AVG', db.sequelize.col('mid')), sortType]],
+        avgVolume:  [[db.sequelize.fn('AVG', db.sequelize.col('volume')), sortType]]
+
+    };
+    if (sorts[sortField]) {
+        order = sorts[sortField];
     }
 
 
-    order = [[sortField, sortType]];
 
-    if (sortField === "avgPrice") order = [[db.sequelize.fn('AVG', db.sequelize.col('mid')), sortType]];
-    if (sortField === "avgVolume") order = [[db.sequelize.fn('AVG', db.sequelize.col('volume')), sortType]];
-
+//отрефакторить позже
     if (sortField === "trends") {
         let TrendsData = await Trends.findAll({
             offset: page * 11,
@@ -373,16 +382,10 @@ exports.findAllAsync = async (req, res) => {
     }
 
 
-    let TableData = await Promise.all((await RouteTable.findAll({
-        offset: page * 11,
-        limit: 11,
+    let TableData = (await RouteTable.findAll({
+        offset: page * count,
+        limit: count,
         where,
-        /*   where: {
-               datecreate:
-                   {
-                       [Op.between]: [startDate, stopDate]
-                   },
-           },*/
         attributes: [
             'id',
             'name',
@@ -392,6 +395,10 @@ exports.findAllAsync = async (req, res) => {
             'volume',
             [db.sequelize.fn('AVG', db.sequelize.col('volume')), 'avgVolume'],
             [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgPrice"],
+            [db.sequelize.literal(`(SELECT value FROM trendsparams AS ts 
+                    WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(\`aformattable\`.\`name\`,1,2))`), 'trend1'],
+            [db.sequelize.literal(`(SELECT value FROM trendsparams AS ts 
+                    WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(\`aformattable\`.\`name\`,3,2))`), 'trend2'],
         ],
         include: [{// Notice `include` takes an ARRAY
             model: Distance,
@@ -405,8 +412,8 @@ exports.findAllAsync = async (req, res) => {
             }
         }],
         group: ['name'],
-        order: order
-    })).map(async (it) => ({
+        order
+    }).map(async (it) => ({
         ...(it.toJSON()),
         addParams: await RouteTable.findAll(
             {
@@ -421,28 +428,6 @@ exports.findAllAsync = async (req, res) => {
         ),
         route: it.route.split(','),
         pm: it.mid / it.mile,
-        trend1:
-            await Trends.findOne({
-                attributes:
-                    [
-                        'value',
-                    ],
-                where: {
-                    namestate: it.name.substring(0, 2),
-                    intervaldate: 30,
-                }
-            }),
-        trend2:
-            await Trends.findOne({
-                attributes:
-                    [
-                        'value',
-                    ],
-                where: {
-                    namestate: it.name.substring(2, 4),
-                    intervaldate: 30,
-                }
-            }),
         city1:
             await CitiesRoutes.findOne({
                 where: {
@@ -460,9 +445,7 @@ exports.findAllAsync = async (req, res) => {
 
     })));
 
-    let counter = await Promise.all((
-
-        await RouteTable.count(
+    let counter = await RouteTable.count(
             {
                 where,
                 include: [{// Notice `include` takes an ARRAY
@@ -478,12 +461,10 @@ exports.findAllAsync = async (req, res) => {
                 }]
                 , group: ['name']
             }
-        )
-
-    ));
+        );
 
     return res.status(200).json({
-        TableData, totalOne: counter.length, totalPages: Math.floor(counter.length / 11) + 1, curPage: page
+        TableData, totalOne: counter, totalPages: Math.floor(counter / count) + 1, curPage: page
     });
 }
 
