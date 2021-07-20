@@ -245,16 +245,15 @@ exports.findAllAsync = async ({
     }
 
     let order = [["name", "ASC"]],
-    sorts = {
-        name: [["name", "ASC"]],
-        avgPrice: [[db.sequelize.fn('AVG', db.sequelize.col('mid')), sortType]],
-        avgVolume:  [[db.sequelize.fn('AVG', db.sequelize.col('volume')), sortType]]
+        sorts = {
+            name: [["name", "ASC"]],
+            avgPrice: [[db.sequelize.fn('AVG', db.sequelize.col('mid')), sortType]],
+            avgVolume: [[db.sequelize.fn('AVG', db.sequelize.col('volume')), sortType]]
 
-    };
+        };
     if (sorts[sortField]) {
         order = sorts[sortField];
     }
-
 
 
 //отрефакторить позже
@@ -381,88 +380,91 @@ exports.findAllAsync = async ({
         });
     }
 
-
-    let TableData = await Promise.all((await RouteTable.findAll({
-        offset: page * count,
-        limit: count,
-        where,
-        attributes: [
-            'id',
-            'name',
-            'mile',
-            'route',
-            'mid',
-            'volume',
-            [db.sequelize.fn('AVG', db.sequelize.col('volume')), 'avgVolume'],
-            [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgPrice"],
-            [db.sequelize.literal(`(SELECT value FROM trendsparams AS ts 
-                    WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(\`aformattable\`.\`name\`,1,2))`), 'trend1'],
-            [db.sequelize.literal(`(SELECT value FROM trendsparams AS ts 
-                    WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(\`aformattable\`.\`name\`,3,2))`), 'trend2'],
-        ],
-        include: [{// Notice `include` takes an ARRAY
-            model: Distance,
-            as: 'Distances',
-            attributes: ['distance'],
-            where: {
-                distance:
-                    {
-                        [Op.between]: [minMiles, maxMiles]
-                    }
-            }
-        }],
-        group: ['name'],
-        order
-    })).map(async (it) => ({
-        ...(it.toJSON()),
-        addParams: await RouteTable.findAll(
-            {
-                attributes: [
-                    [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgAllPrice"],
-                    [db.sequelize.fn('AVG', db.sequelize.col('volume')), "avgAllVollume"],
-                    //   [db.sequelize.literal('(100*(avg(aformattable.mid)-(SELECT avg(a.mid) FROM `aformattables` a where a.name = aformattable.name))/(SELECT avg(a.mid) FROM `aformattables` a where a.name = aformattable.name)) '),'PriceProcent'],
-                    //  [db.sequelize.literal('(100*(avg(aformattable.volume)-(SELECT avg(a.volume) FROM `aformattables` a where a.name = aformattable.name)) /(SELECT avg(a.volume) FROM `aformattables` a where a.name = aformattable.name)) '),'VollumeProcent']
-                ],
-                where: {name: it.name}
-            }
-        ),
-        route: it.route.split(','),
-        pm: it.mid / it.mile,
-        city1:
-            await CitiesRoutes.findOne({
-                where: {
-                    FromState: it.name.substring(0, 2),
-                }
-            }),
-        city2:
-            await CitiesRoutes.findOne({
-                where: {
-                    ToState: it.name.substring(2, 4),
-                }
-            }),
-        profit: (8 * it.mid) - ((it.Distances.distance / 6.5) * 2.6),
-
-
-    })));
-
     let counter = await RouteTable.count(
-            {
-                distinct: true,
-                col: 'name',
-                where,
-                include: {// Notice `include` takes an ARRAY
-                    model: Distance,
-                    as: 'Distances',
-                    attributes: [],
-                    where: {
-                        distance:
-                            {
-                                [Op.between]: [minMiles, maxMiles]
-                            }
-                    }
+        {
+            distinct: true,
+            col: 'name',
+            where,
+            include: {// Notice `include` takes an ARRAY
+                model: Distance,
+                as: 'Distances',
+                attributes: [],
+                where: {
+                    distance:
+                        {
+                            [Op.between]: [minMiles, maxMiles]
+                        }
                 }
             }
-        );
+        }
+    );
+
+    let TableData = [];
+    if (counter > 0) {
+        TableData = await Promise.all((await RouteTable.findAll({
+            offset: page * count,
+            limit: count,
+            where,
+            attributes: [
+                'id',
+                'name',
+                'mile',
+                'route',
+                'mid',
+                'volume',
+                [db.sequelize.fn('AVG', db.sequelize.col('volume')), 'avgVolume'],
+                [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgPrice"],
+                [db.sequelize.literal(`(SELECT value FROM trendsparams AS ts 
+                    WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(\`aformattable\`.\`name\`,1,2))`), 'trend1'],
+                [db.sequelize.literal(`(SELECT value FROM trendsparams AS ts 
+                    WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(\`aformattable\`.\`name\`,3,2))`), 'trend2'],
+            ],
+            include: [{// Notice `include` takes an ARRAY
+                model: Distance,
+                as: 'Distances',
+                attributes: ['distance'],
+                where: {
+                    distance:
+                        {
+                            [Op.between]: [minMiles, maxMiles]
+                        }
+                }
+            }],
+            group: ['name'],
+            order
+        })).map(async (it) => ({
+            ...(it.toJSON()),
+            addParams: await RouteTable.findAll(
+                {
+                    attributes: [
+                        [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgAllPrice"],
+                        [db.sequelize.fn('AVG', db.sequelize.col('volume')), "avgAllVollume"],
+                        //   [db.sequelize.literal('(100*(avg(aformattable.mid)-(SELECT avg(a.mid) FROM `aformattables` a where a.name = aformattable.name))/(SELECT avg(a.mid) FROM `aformattables` a where a.name = aformattable.name)) '),'PriceProcent'],
+                        //  [db.sequelize.literal('(100*(avg(aformattable.volume)-(SELECT avg(a.volume) FROM `aformattables` a where a.name = aformattable.name)) /(SELECT avg(a.volume) FROM `aformattables` a where a.name = aformattable.name)) '),'VollumeProcent']
+                    ],
+                    where: {name: it.name}
+                }
+            ),
+            route: it.route.split(','),
+            pm: it.mid / it.mile,
+            city1:
+                await CitiesRoutes.findOne({
+                    where: {
+                        FromState: it.name.substring(0, 2),
+                    }
+                }),
+            city2:
+                await CitiesRoutes.findOne({
+                    where: {
+                        ToState: it.name.substring(2, 4),
+                    }
+                }),
+            profit: (8 * it.mid) - ((it.Distances.distance / 6.5) * 2.6),
+
+
+        })));
+
+    }
 
     return res.status(200).json({
         TableData, totalOne: counter, totalPages: Math.floor(counter / count) + 1, curPage: page
