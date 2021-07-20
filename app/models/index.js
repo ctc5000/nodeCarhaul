@@ -32,11 +32,7 @@ db.aformattable.belongsTo(db.Distance, {
   as: "Distances",
 });
 
-db.aformattable.hasOne(db.CitiesRoutes, {
-  foreignKey: "FromState",
-  as: "city1",
-  sourceKey: 'SUBSTRING(`name`, 1,2)'
-});
+
 
 
 module.exports = db;
