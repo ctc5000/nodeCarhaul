@@ -382,7 +382,7 @@ exports.findAllAsync = async ({
     }
 
 
-    let TableData = (await RouteTable.findAll({
+    let TableData = await Promise.all((await RouteTable.findAll({
         offset: page * count,
         limit: count,
         where,
@@ -443,12 +443,11 @@ exports.findAllAsync = async ({
         profit: (8 * it.mid) - ((it.Distances.distance / 6.5) * 2.6),
 
 
-    }));
+    })));
 
     let counter = await RouteTable.count(
             {
-                attributes: ['name'],
-                distinct:true,
+                distinct:'name',
                 where,
                 include: {// Notice `include` takes an ARRAY
                     model: Distance,
