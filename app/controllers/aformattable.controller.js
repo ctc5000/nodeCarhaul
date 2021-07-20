@@ -447,19 +447,20 @@ exports.findAllAsync = async ({
 
     let counter = await RouteTable.count(
             {
+                attributes: ['name'],
                 distinct:true,
                 where,
-                include: [{// Notice `include` takes an ARRAY
+                include: {// Notice `include` takes an ARRAY
                     model: Distance,
                     as: 'Distances',
-                    attributes: ['distance'],
+                    attributes: [],
                     where: {
                         distance:
                             {
                                 [Op.between]: [minMiles, maxMiles]
                             }
                     }
-                }]
+                }
             }
         );
 
