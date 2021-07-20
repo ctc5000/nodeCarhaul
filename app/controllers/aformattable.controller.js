@@ -410,7 +410,11 @@ exports.findAllAsync = async ({
                         [Op.between]: [minMiles, maxMiles]
                     }
             }
-        }],
+        },
+            {
+                model: CitiesRoutes,
+                as: 'city1',
+            }],
         group: ['name'],
         order
     })).map(async (it) => ({
@@ -428,12 +432,12 @@ exports.findAllAsync = async ({
         ),
         route: it.route.split(','),
         pm: it.mid / it.mile,
-        city1:
-            await CitiesRoutes.findOne({
-                where: {
-                    FromState: it.name.substring(0, 2),
-                }
-            }),
+        // city1:
+        //     await CitiesRoutes.findOne({
+        //         where: {
+        //             FromState: it.name.substring(0, 2),
+        //         }
+        //     }),
         city2:
             await CitiesRoutes.findOne({
                 where: {
