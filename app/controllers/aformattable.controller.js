@@ -413,7 +413,7 @@ exports.findAllAsync = async ({
         }],
         group: ['name'],
         order
-    }).map(async (it) => ({
+    })).map(async (it) => ({
         ...(it.toJSON()),
         addParams: await RouteTable.findAll(
             {
@@ -443,7 +443,7 @@ exports.findAllAsync = async ({
         profit: (8 * it.mid) - ((it.Distances.distance / 6.5) * 2.6),
 
 
-    })));
+    }));
 
     let counter = await RouteTable.count(
             {
