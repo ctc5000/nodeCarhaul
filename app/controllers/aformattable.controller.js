@@ -384,7 +384,6 @@ exports.findAllAsync = async ({
 
     let TableData = [];
     let addParamsArray = [];
-    console.log('whereAllCount',whereAllCount);
     if (counter > 0) {
         let addParamsQuery = (await RouteTable.findAll(
             {
@@ -398,10 +397,8 @@ exports.findAllAsync = async ({
                 logging: console.log
             }
         )).map(it=>{
-            addParamsArray[it.name]=it;
-            console.log('it.name',it.name);
+            addParamsArray[it.name]=it.toJSON();
         });
-        console.log('addParamsArray',addParamsArray);
         TableData = await Promise.all((await RouteTable.findAll({
             offset: page * count,
             limit: count,
@@ -444,7 +441,6 @@ exports.findAllAsync = async ({
             pm: it.mid / it.mile,
             profit: (8 * it.mid) - ((it.Distances.distance / 6.5) * 2.6),
         })));
-
     }
 
     return res.status(200).json({
