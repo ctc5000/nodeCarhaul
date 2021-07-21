@@ -383,20 +383,22 @@ exports.findAllAsync = async ({
     );
 
     let TableData = [];
+    let addParamsArray = [];
     if (counter > 0) {
-        let addParamsArray = (await RouteTable.findAll(
+        let addParamsQuery = (await RouteTable.findAll(
             {
                 attributes: [
                     'name'
                     [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgAllPrice"],
                     [db.sequelize.fn('AVG', db.sequelize.col('volume')), "avgAllVollume"],
-                    //   [db.sequelize.literal('(100*(avg(aformattable.mid)-(SELECT avg(a.mid) FROM `aformattables` a where a.name = aformattable.name))/(SELECT avg(a.mid) FROM `aformattables` a where a.name = aformattable.name)) '),'PriceProcent'],
-                    //  [db.sequelize.literal('(100*(avg(aformattable.volume)-(SELECT avg(a.volume) FROM `aformattables` a where a.name = aformattable.name)) /(SELECT avg(a.volume) FROM `aformattables` a where a.name = aformattable.name)) '),'VollumeProcent']
-                ],
+                  ],
                 where: whereAllCount,
                 group: ['name'],
             }
-        )).map(it=>it.name=it);
+        )).map(it=>{
+            addParamsArray[it.name]=it;
+            console.log('it.name',it.name);
+        });
         console.log('addParamsArray',addParamsArray);
         TableData = await Promise.all((await RouteTable.findAll({
             offset: page * count,
