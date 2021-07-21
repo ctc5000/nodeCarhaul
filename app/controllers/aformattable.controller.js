@@ -384,16 +384,18 @@ exports.findAllAsync = async ({
 
     let TableData = [];
     let addParamsArray = [];
+    console.log('whereAllCount',whereAllCount);
     if (counter > 0) {
         let addParamsQuery = (await RouteTable.findAll(
             {
                 attributes: [
-                    'name'
+                    'name',
                     [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgAllPrice"],
                     [db.sequelize.fn('AVG', db.sequelize.col('volume')), "avgAllVollume"],
                   ],
                 where: whereAllCount,
                 group: ['name'],
+                logging: console.log
             }
         )).map(it=>{
             addParamsArray[it.name]=it;
