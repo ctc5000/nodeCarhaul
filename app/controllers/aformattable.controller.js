@@ -45,18 +45,17 @@ const operatorsAliases = {
 /*
 * Создание записи таблицы
 */
-exports.createRowFormatTables = async (req, res) => {
+exports.createRowFormatTables = async ({body: {name}}, res) => {
     console.log("True action insert data to main table");
-    if (!req.body.name) {
+    if (!name) {
         res.status(400).send({
             message: "Content can not be empty!"
         });
+
         return;
     }
-
-
     let splitedBody = name.split(","),
-        name = splitedBody[0],
+        routeName = splitedBody[0],
         type = splitedBody[1],
         low = splitedBody[2],
         mid = splitedBody[3],
@@ -64,17 +63,17 @@ exports.createRowFormatTables = async (req, res) => {
         volume = splitedBody[5],
         mile = splitedBody[6];
 
-    console.log(req.body);
+    console.log(name);
     const datecreate = new Date();
     let distid = 0;
-    let routeName = name;
+
     const state1 = await Dictionary.findOne({
         attributes:
             [
                 'value',
             ],
         where: {
-            name: name.substring(0, 2),
+            name: routeName.substring(0, 2),
         }
     });
     const state2 =
@@ -84,7 +83,7 @@ exports.createRowFormatTables = async (req, res) => {
                     'value',
                 ],
             where: {
-                name: name.substring(2, 4),
+                name: routeName.substring(2, 4),
             }
         });
 
@@ -102,7 +101,7 @@ exports.createRowFormatTables = async (req, res) => {
     }
     await RouteTable.build({
         type: type,
-        name: name,
+        name: routeName,
         route: state1.value + ',' + state2.value,
         datecreate: datecreate,
         low: low,
