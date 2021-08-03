@@ -51,7 +51,6 @@ exports.createRowFormatTables = async ({body: {name}}, res) => {
         res.status(400).send({
             message: "Content can not be empty!"
         });
-
         return;
     }
     let splitedBody = name.split(","),
@@ -62,7 +61,6 @@ exports.createRowFormatTables = async ({body: {name}}, res) => {
         high = splitedBody[4],
         volume = splitedBody[5],
         mile = splitedBody[6];
-
     console.log(name);
     const datecreate = new Date();
     let distid = 0;
@@ -87,15 +85,14 @@ exports.createRowFormatTables = async ({body: {name}}, res) => {
             }
         });
 
-    let dist = await Promise.all((await Distance.findAll({
+    let dist = await Distance.findAll({
             attributes: [
                 'id',
             ],
             where: {
                 name: [routeName],
             }
-        })),
-    );
+        });
     for (let key in dist[0]['dataValues']) {
         distid = dist[0]['dataValues'][key];
     }
