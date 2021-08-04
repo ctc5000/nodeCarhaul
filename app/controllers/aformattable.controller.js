@@ -640,7 +640,16 @@ exports.findAllDetailAsyncFiltered = async (req, res) => {
                 'volume',
                 [db.sequelize.fn('AVG', db.sequelize.col('volume')), 'avgVolume'],
                 [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgPrice"],
+                [db.sequelize.literal(`(SELECT value FROM trendsparams AS ts 
+                    WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(\`aformattable\`.\`name\`,1,2))`), 'trend1'],
+                [db.sequelize.literal(`(SELECT value FROM trendsparams AS ts 
+                    WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(\`aformattable\`.\`name\`,3,2))`), 'trend2'],
+                [db.sequelize.literal(`(SELECT DISTINCT FromCity FROM CitiesRoutes AS sr 
+                    WHERE sr.FromState = SUBSTRING(\`aformattable\`.\`name\`,1,2))`), 'city1'],
+                [db.sequelize.literal(`(SELECT DISTINCT ToCity FROM CitiesRoutes AS sr 
+                    WHERE sr.ToState = SUBSTRING(\`aformattable\`.\`name\`,3,2))`), 'city2'],
             ],
+
             include: [{// Notice `include` takes an ARRAY
                 model: Distance,
                 as: 'Distances',
@@ -667,40 +676,6 @@ exports.findAllDetailAsyncFiltered = async (req, res) => {
         ),
         route: it.route.split(','),
         pm: it.mid / it.mile,
-        trend1:
-            await Trends.findOne({
-                attributes:
-                    [
-                        'value',
-                    ],
-                where: {
-                    namestate: it.name.substring(0, 2),
-                    intervaldate: 30,
-                }
-            }),
-        trend2:
-            await Trends.findOne({
-                attributes:
-                    [
-                        'value',
-                    ],
-                where: {
-                    namestate: it.name.substring(2, 4),
-                    intervaldate: 30,
-                }
-            }),
-        city1:
-            await CitiesRoutes.findOne({
-                where: {
-                    FromState: it.name.substring(0, 2),
-                }
-            }),
-        city2:
-            await CitiesRoutes.findOne({
-                where: {
-                    ToState: it.name.substring(2, 4),
-                }
-            }),
         profit: (8 * it.mid) - ((it.Distances.distance / 6.5) * 2.6),
     })));
 
