@@ -24,6 +24,8 @@ db.aformattable = require("./aformattable.model.js")(sequelize, Sequelize);
 db.Distance = require("./distace.model.js")(sequelize, Sequelize);
 db.DictionaryRoutes = require("./dictionaryRoutes.model.js")(sequelize, Sequelize);
 db.CitiesRoutes = require("./CitiesRoutes.model.js")(sequelize, Sequelize);
+db.Users = require("./users.model.js")(sequelize, Sequelize);
+db.userToRoute = require("./userToRoute.model.js")(sequelize, Sequelize);
 
 
 /*связи*/
@@ -32,7 +34,11 @@ db.aformattable.belongsTo(db.Distance, {
   as: "Distances",
 });
 
-
+db.userToRoute.hasOne( db.Users, {
+  as: 'User',
+  sourceKey: 'userId',
+  foreignKey: 'id',
+});
 
 
 module.exports = db;

@@ -243,7 +243,9 @@ exports.findAllAsync = async ({
 
     let order = [["name", "ASC"]],
         sorts = {
-            name: [["name", "ASC"]],
+            name: [["name", sortType]],
+            mile: [["mile", sortType]],
+            mid: [["mid", sortType]],
             avgPrice: [[db.sequelize.fn('AVG', db.sequelize.col('mid')), sortType]],
             avgVolume: [[db.sequelize.fn('AVG', db.sequelize.col('volume')), sortType]]
 
