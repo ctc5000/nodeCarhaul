@@ -756,7 +756,7 @@ exports.getUserByRouteName = async ({query: {routeName, page = 0, count = 11}}, 
                 model: userToRoute,
                 as: 'Route',
                 where: {
-                    routeName: (routeName) ? {[Op.iLike]: routeName} : {[Op.ne]: null}
+                    routeName: (routeName) ?  routeName : {[Op.ne]: null}
                 }
             }],
             order: [['display_name', 'ASC']],
