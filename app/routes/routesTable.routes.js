@@ -5,6 +5,9 @@ module.exports = app => {
 
     router.post("/set", routeTable.createRowFormatTables);
 
+    //Привязать пользователя к роуту. Передавать userId, routeName
+    router.post("/setUserToRoute", routeTable.setUserToRoute);
+
     //Получить полные данные по таблице с параметрами
     router.get("/",  routeTable.findAllAsync);
 
@@ -21,6 +24,15 @@ module.exports = app => {
     //Получить города
     router.get("/cityes",  routeTable.findCityes);
 
+    //Получить пользователей по имени маршрута routeName.
+    // Если не передавать routeName вернет всех пользователей.
+    // Доступна постраничная навигация page = 0, count = 11
+    router.get("/getUserByRouteName",  routeTable.getUserByRouteName);
+
+    //Получить список привязанных к пользователю маршрутов по id пользователя userId.
+    // Если не передавать userId вернет все приписанные к пользователям маршруты.
+    // Доступна постраничная навигация page = 0, count = 11
+    router.get("/getRouteNameByUser",  routeTable.getRouteNameByUser);
 
 
     app.use('/api/routesTable', router);

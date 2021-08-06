@@ -4,6 +4,8 @@ const Distance = db.Distance;
 const Trends = db.Trends;
 const Dictionary = db.DictionaryRoutes;
 const CitiesRoutes = db.CitiesRoutes;
+const Users = db.Users;
+const userToRoute = db.userToRoute;
 const Op = db.Sequelize.Op;
 const operatorsAliases = {
     $eq: Op.eq,
@@ -61,7 +63,6 @@ exports.createRowFormatTables = async ({body: {name}}, res) => {
         high = splitedBody[4],
         volume = splitedBody[5],
         mile = splitedBody[6];
-    console.log(name);
     const datecreate = new Date();
     let distid = 0;
 
@@ -86,13 +87,13 @@ exports.createRowFormatTables = async ({body: {name}}, res) => {
         });
 
     let dist = await Distance.findAll({
-            attributes: [
-                'id',
-            ],
-            where: {
-                name: [routeName],
-            }
-        });
+        attributes: [
+            'id',
+        ],
+        where: {
+            name: [routeName],
+        }
+    });
     for (let key in dist[0]['dataValues']) {
         distid = dist[0]['dataValues'][key];
     }
@@ -234,7 +235,7 @@ exports.findAllAsync = async ({
     let where = {
         datecreate: {[Op.between]: [startDate, stopDate]},
     };
-    let whereAllCount={name: {[Op.ne]:null}}
+    let whereAllCount = {name: {[Op.ne]: null}}
     if (states.length > 1 && states !== "[]") {
         statesJson = JSON.parse(states);
         where.name = {[Op.in]: statesJson};
@@ -383,19 +384,19 @@ exports.findAllAsync = async ({
     let TableData = [];
     let addParamsArray = [];
     if (counter > 0) {
-        let addParamsQuery = (await RouteTable.findAll(
+        (await RouteTable.findAll(
             {
                 attributes: [
                     'name',
                     [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgAllPrice"],
                     [db.sequelize.fn('AVG', db.sequelize.col('volume')), "avgAllVollume"],
-                  ],
+                ],
                 where: whereAllCount,
                 group: ['name'],
                 logging: console.log
             }
-        )).map(it=>{
-            addParamsArray[it.name]=it.toJSON();
+        )).map(it => {
+            addParamsArray[it.name] = it.toJSON();
         });
         TableData = await Promise.all((await RouteTable.findAll({
             offset: page * count,
@@ -707,3 +708,71 @@ exports.findCityes = async (req, res) => {
 }
 
 
+exports.setUserToRoute = async ({body: {userId, routeName}}, res) => {
+    if (!userId) {
+        return res.status(400).send({
+            message: "User can not be empty!"
+        });
+    }
+    if (!routeName) {
+        return res.status(400).send({
+            message: "RouteName can not be empty!"
+        });
+    }
+    const User = await Users.findOne({
+        where: {
+            ID: userId,
+        }
+    });
+    if (!User) {
+        return res.status(404).send({
+            message: "User not found!"
+        });
+    }
+
+    await userToRoute.build({
+        userId: userId,
+        routeName: routeName,
+    }).save()
+        .then(data => {
+            return res.send(data);
+        })
+        .catch(err => {
+            return res.status(500).send({
+                message:
+                    err.message || "Some error occurred while save user to route."
+            });
+        });
+};
+
+
+exports.getUserByRouteName = async ({query: {routeName, page = 0, count = 11}}, res) => {
+    return res.status(200).json({
+        users: await Users.findAll({
+            include: [{
+                required: (!!routeName),
+                model: userToRoute,
+                as: 'Route',
+                where: {
+                    routeName: (routeName) ? {[Op.iLike]: routeName} : {[Op.ne]: null}
+                }
+            }],
+            order: [['display_name', 'ASC']],
+            offset: page * count,
+            limit: count,
+        })
+    });
+}
+exports.getRouteNameByUser = async ({query: {userId, page = 0, count = 11}}, res) => {
+    return res.status(200).json({
+        routeName: await userToRoute.findAll({
+            distinct: true,
+            attributes: ['routeName'],
+            where: {
+                userId: (userId) ? userId : {[Op.ne]: null}
+            },
+            offset: page * count,
+            limit: count,
+        })
+    });
+}

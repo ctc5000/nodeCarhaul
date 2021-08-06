@@ -39,6 +39,10 @@ db.userToRoute.hasOne( db.Users, {
   sourceKey: 'userId',
   foreignKey: 'id',
 });
-
+db.Users.hasMany( db.userToRoute, {
+  as: 'Route',
+  foreignKey: 'userId',
+  sourceKey: 'ID',
+});
 
 module.exports = db;
