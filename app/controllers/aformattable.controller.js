@@ -708,9 +708,7 @@ exports.findCityes = async (req, res) => {
 }
 
 
-exports.setUserToRoute = async (req, res) => {
-    console.log(req);
-    //:{body: {userId, routeName}}
+exports.setUserToRoute = async ({body: {userId, routeName}}, res) => {
     if (!userId) {
         return res.status(400).send({
             message: "User can not be empty!"
