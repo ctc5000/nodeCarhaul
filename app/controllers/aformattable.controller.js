@@ -762,6 +762,7 @@ exports.getUserByRouteName = async ({query: {routeName, page = 0, count = 11}}, 
             order: [['display_name', 'ASC']],
             offset: page * count,
             limit: count,
+            subQuery: false
         })
     });
 }
