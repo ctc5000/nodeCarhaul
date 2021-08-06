@@ -1,5 +1,10 @@
 module.exports = (sequelize, Sequelize) => {
     const Users = sequelize.define("wp_users", {
+        id: {
+            type: Sequelize.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+        },
             user_status: {
                 type: Sequelize.INTEGER
             },

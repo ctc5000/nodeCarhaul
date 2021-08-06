@@ -34,15 +34,15 @@ db.aformattable.belongsTo(db.Distance, {
   as: "Distances",
 });
 
-db.userToRoute.hasOne( db.Users, {
+db.userToRoute.belongsTo( db.Users, {
   as: 'User',
-  sourceKey: 'userId',
-  foreignKey: 'id',
+  foreignKey: 'userId',
+  sourceKey: 'id',
 });
-// db.Users.hasMany( db.userToRoute, {
-//   as: 'Route',
-//   foreignKey: 'userId',
-//   sourceKey: 'ID',
-// });
+db.Users.hasMany( db.userToRoute, {
+  as: 'Route',
+  foreignKey: 'userId',
+  sourceKey: 'id',
+});
 
 module.exports = db;
