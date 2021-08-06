@@ -720,8 +720,9 @@ exports.setUserToRoute = async ({body: {userId, routeName}}, res) => {
         });
     }
     const User = await Users.findOne({
+        attributes:['id'],
         where: {
-            ID: userId,
+            id: userId,
         }
     });
     if (!User) {
@@ -749,6 +750,7 @@ exports.setUserToRoute = async ({body: {userId, routeName}}, res) => {
 exports.getUserByRouteName = async ({query: {routeName, page = 0, count = 11}}, res) => {
     return res.status(200).json({
         users: await Users.findAll({
+            attributes:['id', 'display_name', 'user_status'],
             include: [{
                 required: (!!routeName),
                 model: userToRoute,
