@@ -40,6 +40,8 @@ module.exports = app => {
     // Доступна постраничная навигация page = 0, count = 11
     router.get("/getRouteNameByUser",  routeTable.getRouteNameByUser);
 
+    router.get("/getUser/:userId",  routeTable.getUser);
+
 
     app.use('/api/routesTable', router);
 };

@@ -26,6 +26,7 @@ db.DictionaryRoutes = require("./dictionaryRoutes.model.js")(sequelize, Sequeliz
 db.CitiesRoutes = require("./CitiesRoutes.model.js")(sequelize, Sequelize);
 db.Users = require("./users.model.js")(sequelize, Sequelize);
 db.userToRoute = require("./userToRoute.model.js")(sequelize, Sequelize);
+db.car = require("./car.model.js")(sequelize, Sequelize);
 
 
 /*связи*/
@@ -41,6 +42,11 @@ db.userToRoute.belongsTo( db.Users, {
 });
 db.Users.hasMany( db.userToRoute, {
   as: 'Route',
+  foreignKey: 'userId',
+  sourceKey: 'id',
+});
+db.Users.hasMany( db.car, {
+  as: 'cars',
   foreignKey: 'userId',
   sourceKey: 'id',
 });

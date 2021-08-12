@@ -6,6 +6,7 @@ const Dictionary = db.DictionaryRoutes;
 const CitiesRoutes = db.CitiesRoutes;
 const Users = db.Users;
 const userToRoute = db.userToRoute;
+const car = db.car;
 const Op = db.Sequelize.Op;
 const operatorsAliases = {
     $eq: Op.eq,
@@ -761,13 +762,79 @@ exports.setUser = async ({params: {userId}, body: {user_login, user_pass, user_n
         });
     }
     if (user_login) User.user_login = user_login;
-    if (user_pass) User.user_pass =  crypto.createHash('md5').update(user_pass).digest('hex');
+    if (user_pass) User.user_pass = crypto.createHash('md5').update(user_pass).digest('hex');
     if (user_nicename) User.user_nicename = user_nicename;
     if (user_email) User.user_email = user_email;
     if (display_name) User.display_name = display_name;
     if (ratio) User.ratio = ratio;
+    const error = User.validate();
+    if (error) return res.status(500).json(error);
+    User.save();
+    return res.status(200).json(User);
+};
+exports.setUserCar = async ({params: {userId}, body: {carId, name, type, volume}}, res) => {
 
+    const User = await Users.findOne({
+        attributes: [`id`],
+        where: {
+            id: userId,
+        }
+    });
+    if (!User) {
+        return res.status(404).send({
+            message: "User not found!"
+        });
+    }
+    let cars = undefined;
+    if (carId) {
+        cars = await car.findOne({
+            attributes: [`id`],
+            where: {
+                id: carId,
+            }
+        });
+        if (!cars) {
+            return res.status(404).send({
+                message: "Car not found!"
+            });
+        }
+        car.setData({
+            name: name,
+            type: type,
+            volume: volume,
+            userId:userId
+        });
+    } else {
+        cars = await car.build({
+            name: name,
+            type: type,
+            volume: volume,
+            userId:userId
+        });
+    }
 
+    const error = cars.validate();
+    if (error) return res.status(500).json(error);
+    cars.save();
+    return res.status(200).json(cars);
+};
+exports.getUser = async ({params: {userId}}, res) => {
+
+    const User = await Users.findOne({
+        attributes: [`id`, `user_status`, `user_login`, `user_pass`, `user_nicename`, `user_email`, `user_url`, `display_name`, `ratio`],
+        where: {
+            id: userId,
+        },
+        include: {
+            model: db.car,
+            as: 'cars'
+        }
+    });
+    if (!User) {
+        return res.status(404).send({
+            message: "User not found!"
+        });
+    }
     return res.status(200).json(User);
 };
 
