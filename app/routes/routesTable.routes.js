@@ -12,6 +12,9 @@ module.exports = app => {
     //Отредактировать пользователя
     router.post("/setUser/:userId", routeTable.setUser);
 
+    //Отредактировать/добавить машину пользователя
+    router.post("/setUserCar/:userId", routeTable.setUserCar);
+
 
 
     //Получить полные данные по таблице с параметрами
