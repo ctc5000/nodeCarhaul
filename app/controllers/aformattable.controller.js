@@ -43,7 +43,7 @@ const operatorsAliases = {
     $values: Op.values,
     $col: Op.col
 };
-
+const crypto = require('crypto');
 /*
 * Создание записи таблицы
 */
@@ -720,7 +720,7 @@ exports.setUserToRoute = async ({body: {userId, routeName}}, res) => {
         });
     }
     const User = await Users.findOne({
-        attributes:['id'],
+        attributes: ['id'],
         where: {
             id: userId,
         }
@@ -747,16 +747,41 @@ exports.setUserToRoute = async ({body: {userId, routeName}}, res) => {
 };
 
 
+exports.setUser = async ({params: {userId}, body: {user_login, user_pass, user_nicename, user_email, display_name, ratio}}, res) => {
+
+    const User = await Users.findOne({
+        attributes: ['id'],
+        where: {
+            id: userId,
+        }
+    });
+    if (!User) {
+        return res.status(404).send({
+            message: "User not found!"
+        });
+    }
+    if (user_login) User.user_login = user_login;
+    if (user_pass) User.user_pass =  crypto.createHash('md5').update(user_pass).digest('hex');
+    if (user_nicename) User.user_nicename = user_nicename;
+    if (user_email) User.user_email = user_email;
+    if (display_name) User.display_name = display_name;
+    if (ratio) User.ratio = ratio;
+
+
+    return res.status(200).json(User);
+};
+
+
 exports.getUserByRouteName = async ({query: {routeName, page = 0, count = 11}}, res) => {
     return res.status(200).json({
         users: await Users.findAll({
-            attributes:['id', 'display_name', 'user_status'],
+            attributes: ['id', 'display_name', 'user_status'],
             include: [{
                 required: (!!routeName),
                 model: userToRoute,
                 as: 'Route',
                 where: {
-                    routeName: (routeName) ?  routeName : {[Op.ne]: null}
+                    routeName: (routeName) ? routeName : {[Op.ne]: null}
                 }
             }],
             order: [['display_name', 'ASC']],

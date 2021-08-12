@@ -1,14 +1,17 @@
 module.exports = (sequelize, Sequelize) => {
     const Users = sequelize.define("wp_users", {
-        id: {
-            type: Sequelize.INTEGER,
-            primaryKey: true,
-            autoIncrement: true
-        },
+            id: {
+                type: Sequelize.INTEGER,
+                primaryKey: true,
+                autoIncrement: true
+            },
             user_status: {
                 type: Sequelize.INTEGER
             },
             user_login: {
+                type: Sequelize.STRING
+            },
+            user_pass: {
                 type: Sequelize.STRING
             },
             user_nicename: {
@@ -22,6 +25,9 @@ module.exports = (sequelize, Sequelize) => {
             },
             display_name: {
                 type: Sequelize.STRING
+            },
+            ratio: {
+                type: Sequelize.DOUBLE
             },
 
         }

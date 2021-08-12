@@ -8,6 +8,12 @@ module.exports = app => {
     //Привязать пользователя к роуту. Передавать userId, routeName
     router.post("/setUserToRoute", routeTable.setUserToRoute);
 
+
+    //Отредактировать пользователя
+    router.post("/setUser/:userId", routeTable.setUser);
+
+
+
     //Получить полные данные по таблице с параметрами
     router.get("/",  routeTable.findAllAsync);
 
