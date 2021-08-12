@@ -769,7 +769,7 @@ exports.setUser = async ({params: {userId}, body: {user_login, user_pass, user_n
     if (ratio) User.ratio = ratio;
     const error = User.validate();
     if (error) return res.status(500).json(error);
-    User.save();
+    await User.save();
     return res.status(200).json(User);
 };
 exports.setUserCar = async ({params: {userId}, body: {carId, name, type, volume}}, res) => {
@@ -815,7 +815,7 @@ exports.setUserCar = async ({params: {userId}, body: {carId, name, type, volume}
 
     const error = cars.validate();
     if (error) return res.status(500).json(error);
-    cars.save();
+    await cars.save();
     return res.status(200).json(cars);
 };
 exports.getUser = async ({params: {userId}}, res) => {
