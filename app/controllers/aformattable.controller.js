@@ -750,6 +750,7 @@ exports.setUserToRoute = async ({body: {userId, routeName}}, res) => {
 exports.setUser = async ({params: {userId}, body: {user_login, user_pass, user_nicename, user_email, display_name, ratio}}, res) => {
 
     const User = await Users.findOne({
+        attributes: [`id`, `user_status`, `user_login`, `user_pass`, `user_nicename`, `user_email`, `user_url`, `display_name`, `ratio`],
         where: {
             id: userId,
         }
