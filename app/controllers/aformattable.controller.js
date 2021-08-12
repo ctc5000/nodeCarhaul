@@ -767,8 +767,6 @@ exports.setUser = async ({params: {userId}, body: {user_login, user_pass, user_n
     if (user_email) User.user_email = user_email;
     if (display_name) User.display_name = display_name;
     if (ratio) User.ratio = ratio;
-    const error = User.validate();
-    if (error) return res.status(500).json(error);
     await User.save();
     return res.status(200).json(User);
 };
@@ -812,9 +810,6 @@ exports.setUserCar = async ({params: {userId}, body: {carId, name, type, volume}
             userId:userId
         });
     }
-
-    const error = cars.validate();
-    if (error) return res.status(500).json(error);
     await cars.save();
     return res.status(200).json(cars);
 };
