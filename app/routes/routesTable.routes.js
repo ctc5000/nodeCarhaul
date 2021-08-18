@@ -8,6 +8,9 @@ module.exports = app => {
     //Привязать пользователя к роуту. Передавать userId, routeName
     router.post("/setUserToRoute", routeTable.setUserToRoute);
 
+    //Отвязать пользователя к роуту. Передавать userId, routeName
+    router.delete("/setUserToRoute", routeTable. deleteUserToRoute);
+
 
     //Отредактировать пользователя
     router.post("/setUser/:userId", routeTable.setUser);

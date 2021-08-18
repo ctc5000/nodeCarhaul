@@ -747,6 +747,40 @@ exports.setUserToRoute = async ({body: {userId, routeName}}, res) => {
         });
 };
 
+exports.deleteUserToRoute = async ({body: {userId, routeName}}, res) => {
+    if (!userId) {
+        return res.status(400).send({
+            message: "User can not be empty!"
+        });
+    }
+    if (!routeName) {
+        return res.status(400).send({
+            message: "RouteName can not be empty!"
+        });
+    }
+    const User = await Users.findOne({
+        attributes: ['id'],
+        where: {
+            id: userId,
+        }
+    });
+    if (!User) {
+        return res.status(404).send({
+            message: "User not found!"
+        });
+    }
+
+    await userToRoute.destroy({
+        where: {
+            userId: userId,
+            routeName: routeName,
+        }
+    });
+    return res.status(200).send({
+        message: 'rote deleted'
+    });
+};
+
 
 exports.setUser = async ({params: {userId}, body: {user_login, user_pass, user_nicename, user_email, display_name, ratio}}, res) => {
 
