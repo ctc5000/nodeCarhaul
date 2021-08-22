@@ -26,6 +26,18 @@ module.exports = (sequelize, Sequelize) => {
             display_name: {
                 type: Sequelize.STRING
             },
+            cars: {
+                type: Sequelize.INTEGER
+            },
+            fuel_price: {
+                type: Sequelize.DOUBLE
+            },
+            avg_fuel_cons: {
+                type: Sequelize.DOUBLE
+            },
+            other_exp: {
+                type: Sequelize.DOUBLE
+            },
             ratio: {
                 type: Sequelize.DOUBLE
             },

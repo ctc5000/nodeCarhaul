@@ -782,10 +782,10 @@ exports.deleteUserToRoute = async ({body: {userId, routeName}}, res) => {
 };
 
 
-exports.setUser = async ({params: {userId}, body: {user_login, user_pass, user_nicename, user_email, display_name, ratio}}, res) => {
+exports.setUser = async ({params: {userId}, body: {user_login, user_pass, user_nicename, user_email, display_name, ratio, cars, fuel_price,avg_fuel_cons,other_exp}}, res) => {
 
     const User = await Users.findOne({
-        attributes: [`id`, `user_status`, `user_login`, `user_pass`, `user_nicename`, `user_email`, `user_url`, `display_name`, `ratio`],
+        attributes: [`id`, `user_status`, `user_login`, `user_pass`, `user_nicename`, `user_email`, `user_url`, `display_name`, `ratio`, `cars`, `fuel_price`,`avg_fuel_cons`,`other_exp`],
         where: {
             id: userId,
         }
@@ -801,6 +801,13 @@ exports.setUser = async ({params: {userId}, body: {user_login, user_pass, user_n
     if (user_email) User.user_email = user_email;
     if (display_name) User.display_name = display_name;
     if (ratio) User.ratio = ratio;
+    if (cars) User.cars = cars;
+    if (fuel_price) User.fuel_price = fuel_price;
+    if (avg_fuel_cons) User.ratio = avg_fuel_cons;
+    if (other_exp) User.ratio = other_exp;
+    if(cars && fuel_price&&avg_fuel_cons&&other_exp&&!ratio){
+        User.ratio = (cars*600)-((1000/avg_fuel_cons)*fuel_price)-other_exp;
+    }
     await User.save();
     return res.status(200).json(User);
 };
