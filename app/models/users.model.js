@@ -26,7 +26,7 @@ module.exports = (sequelize, Sequelize) => {
             display_name: {
                 type: Sequelize.STRING
             },
-            cars: {
+            cars_count: {
                 type: Sequelize.INTEGER
             },
             fuel_price: {
