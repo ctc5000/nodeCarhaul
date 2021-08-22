@@ -801,10 +801,10 @@ exports.setUser = async ({params: {userId}, body: {user_login, user_pass, user_n
     if (user_email) User.user_email = user_email;
     if (display_name) User.display_name = display_name;
     if (ratio) User.ratio = ratio;
-    if (cars_count) User.cars = cars_count;
+    if (cars_count) User.cars_count = cars_count;
     if (fuel_price) User.fuel_price = fuel_price;
-    if (avg_fuel_cons) User.ratio = avg_fuel_cons;
-    if (other_exp) User.ratio = other_exp;
+    if (avg_fuel_cons) User.avg_fuel_cons = avg_fuel_cons;
+    if (other_exp) User.other_exp = other_exp;
     if(cars_count && fuel_price&&avg_fuel_cons&&other_exp&&!ratio){
         User.ratio = (cars_count*600)-((1000/avg_fuel_cons)*fuel_price)-other_exp;
     }
