@@ -144,7 +144,7 @@ exports.findAllTrendsAsync = async ({query: {namestate}}, res) => {
 /*
 * Получить данные по направлению
 */
-exports.GetDetail = async ({query: {routeName, startDate, stopDate}}, res) => {
+exports.GetDetail = async ({query: {routeName, startDate, stopDate, userId}}, res) => {
     if (!routeName) {
         res.status(400).send({
             message: "Route Name can not be empty!"
@@ -157,37 +157,42 @@ exports.GetDetail = async ({query: {routeName, startDate, stopDate}}, res) => {
     if (!stopDate) {
         stopDate = new Date();
     }
-    return res.status(200).json({
-        Deatail: await RouteTable.findAll({
-            attributes: [
-                'id',
-                'name',
-                'mile',
-                'route',
-                'mid',
-                'volume',
-                [db.sequelize.fn('AVG', db.sequelize.col('volume')), 'avgVolume'],
-                [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgPrice"],
-                [db.sequelize.literal(`(SELECT value FROM trendsparams AS ts 
+    let userData = {'cars_count':8, 'fuel_price':2.6, 'avg_fuel_cons':6.5, 'other_exp':0};
+    if(userId){
+        userData = await Users.findOne({attributes:['cars_count', 'fuel_price', 'avg_fuel_cons', 'other_exp'], where:{id:userId}});
+    }
+    const Deatail = await RouteTable.findAll({
+        attributes: [
+            'id',
+            'name',
+            'mile',
+            'route',
+            'mid',
+            'volume',
+            [db.sequelize.fn('AVG', db.sequelize.col('volume')), 'avgVolume'],
+            [db.sequelize.fn('AVG', db.sequelize.col('mid')), "avgPrice"],
+            [db.sequelize.literal(`(SELECT value FROM trendsparams AS ts 
                     WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(\`aformattable\`.\`name\`,1,2))`), 'trend1'],
-                [db.sequelize.literal(`(SELECT value FROM trendsparams AS ts 
+            [db.sequelize.literal(`(SELECT value FROM trendsparams AS ts 
                     WHERE ts.intervaldate = 30 AND ts.namestate = SUBSTRING(\`aformattable\`.\`name\`,3,2))`), 'trend2'],
 
-            ],
-            where: {
-                name: routeName,
-                datecreate:
-                    {
-                        [Op.between]: [startDate, stopDate]
-                    },
-            },
-            include: [{
-                model: Distance,
-                as: 'Distances',
-                attributes: ['distance'],
-            }],
-            group: ['name'],
-        }),
+        ],
+        where: {
+            name: routeName,
+            datecreate:
+                {
+                    [Op.between]: [startDate, stopDate]
+                },
+        },
+        include: [{
+            model: Distance,
+            as: 'Distances',
+            attributes: ['distance'],
+        }],
+        group: ['name'],
+    });
+    return res.status(200).json({
+        Deatail,
         GraphPoints: await RouteTable.findAll({
             attributes: [
                 ['mid', 'price'],
@@ -203,7 +208,8 @@ exports.GetDetail = async ({query: {routeName, startDate, stopDate}}, res) => {
             },
             group: ['datecreate'],
             order: [['datecreate', 'DESC']]
-        })
+        }),
+        profit: (userData.cars_count * Deatail.mid) - ((Deatail.Distances.distance / userData.avg_fuel_cons) * userData.fuel_price)-userData.other_exp,
     });
 }
 
@@ -220,6 +226,7 @@ exports.findAllAsync = async ({
                                       sortType = "ASC",
                                       startDate,
                                       stopDate,
+                                      userId,
                                       states = ["ALAR"]
                                   }
                               }, res) => {
@@ -231,7 +238,10 @@ exports.findAllAsync = async ({
     if (!stopDate) {
         stopDate = new Date();
     }
-
+    let userData = {'cars_count':8, 'fuel_price':2.6, 'avg_fuel_cons':6.5, 'other_exp':0};
+    if(userId){
+        userData = await Users.findOne({attributes:['cars_count', 'fuel_price', 'avg_fuel_cons', 'other_exp'], where:{id:userId}});
+    }
     let statesJson = "";
     let where = {
         datecreate: {[Op.between]: [startDate, stopDate]},
@@ -352,7 +362,7 @@ exports.findAllAsync = async ({
                         ToState: it.name.substring(2, 4),
                     }
                 }),
-            profit: (8 * it.mid) - ((it.Distances.distance / 6.5) * 2.6),
+            profit: (userData.cars_count * Deatail.mid) - ((Deatail.Distances.distance / userData.avg_fuel_cons) * userData.fuel_price)-userData.other_exp,
 
 
         })));
