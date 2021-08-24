@@ -184,13 +184,14 @@ exports.GetDetail = async ({query: {routeName, startDate, stopDate, userId}}, re
                     [Op.between]: [startDate, stopDate]
                 },
         },
-        include: [{
+        include: {
             model: Distance,
             as: 'Distances',
             attributes: ['distance'],
-        }],
+        },
         group: ['name'],
     });
+    console.log(Deatail.Distances);
     return res.status(200).json({
         Deatail,
         GraphPoints: await RouteTable.findAll({
