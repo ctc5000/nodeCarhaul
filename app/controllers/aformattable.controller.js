@@ -191,9 +191,8 @@ exports.GetDetail = async ({query: {routeName, startDate, stopDate, userId}}, re
         },
         group: ['name'],
     });
-    console.log(Deatail);
     return res.status(200).json({
-        Deatail,
+        Deatail:[Deatail],
         GraphPoints: await RouteTable.findAll({
             attributes: [
                 ['mid', 'price'],
