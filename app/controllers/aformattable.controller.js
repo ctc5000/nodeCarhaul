@@ -161,7 +161,7 @@ exports.GetDetail = async ({query: {routeName, startDate, stopDate, userId}}, re
     if(userId){
         userData = await Users.findOne({attributes:['cars_count', 'fuel_price', 'avg_fuel_cons', 'other_exp'], where:{id:userId}});
     }
-    const Deatail = await RouteTable.findAll({
+    const Deatail = await RouteTable.findOne({
         attributes: [
             'id',
             'name',
@@ -191,7 +191,7 @@ exports.GetDetail = async ({query: {routeName, startDate, stopDate, userId}}, re
         },
         group: ['name'],
     });
-    console.log(Deatail.Distances);
+    console.log(Deatail);
     return res.status(200).json({
         Deatail,
         GraphPoints: await RouteTable.findAll({
