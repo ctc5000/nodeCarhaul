@@ -17,6 +17,8 @@ module.exports = app => {
 
     //Отредактировать/добавить машину пользователя
     router.post("/setUserCar/:userId", routeTable.setUserCar);
+    //Отредактировать/добавить машину пользователя
+    router.delete("/userCar/:userId", routeTable.deleteUserCar);
 
 
 

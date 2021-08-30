@@ -821,6 +821,26 @@ exports.setUser = async ({params: {userId}, body: {user_login, user_pass, user_n
     await User.save();
     return res.status(200).json(User);
 };
+exports.deleteUserCar = async ({params: {userId}, body: {carId}}, res) => {
+    const User = await Users.findOne({
+        attributes: [`id`],
+        where: {
+            id: userId,
+        }
+    });
+    if (!User) {
+        return res.status(404).send({
+            message: "User not found!"
+        });
+    }
+    await car.destroy({
+        where: {
+            id: carId,
+            userId: userId
+        }
+    });
+    return res.status(200).json({msg: 'Удалена'});
+}
 exports.setUserCar = async ({params: {userId}, body: {carId, name, type, volume}}, res) => {
 
     const User = await Users.findOne({
@@ -867,7 +887,7 @@ exports.setUserCar = async ({params: {userId}, body: {carId, name, type, volume}
 exports.getUser = async ({params: {userId}}, res) => {
 
     const User = await Users.findOne({
-        attributes: [`id`, `user_status`, `user_login`, `user_pass`, `user_nicename`, `user_email`, `user_url`, `display_name`, `ratio`],
+        attributes: [`id`, `user_status`, `user_login`, `user_pass`, `user_nicename`, `user_email`, `user_url`, `display_name`, `ratio`, `cars_count`, `fuel_price`, `avg_fuel_cons`, `other_exp`],
         where: {
             id: userId,
         },
