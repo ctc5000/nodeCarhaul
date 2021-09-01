@@ -841,7 +841,7 @@ exports.deleteUserCar = async ({params: {userId}, body: {carId}}, res) => {
     });
     return res.status(200).json({msg: 'Удалена'});
 }
-exports.setUserCar = async ({params: {userId}, body: {carId, name, type, volume}}, res) => {
+exports.setUserCar = async ({params: {userId}, body: {carId, name, type, volume, mileage}}, res) => {
 
     const User = await Users.findOne({
         attributes: [`id`],
@@ -871,6 +871,7 @@ exports.setUserCar = async ({params: {userId}, body: {carId, name, type, volume}
             name: name,
             type: type,
             volume: volume,
+            mileage:mileage,
             userId:userId
         });
     } else {
