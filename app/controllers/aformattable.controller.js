@@ -879,6 +879,7 @@ exports.setUserCar = async ({params: {userId}, body: {carId, name, type, volume,
             name: name,
             type: type,
             volume: volume,
+            mileage:mileage,
             userId:userId
         });
     }
