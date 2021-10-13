@@ -956,13 +956,10 @@ exports.getReportPerDay = async ({query: {dateFrom, dateTo, name}}, res) => {
             message: "name not found!"
         });
     }
-    // select name, WEEKDAY(datecreate), round(sum(distinct volume)/count( distinct  volume), 2)  from aformattable where volume is not null group by name, WEEKDAY(datecreate);
-    return res.status(200).json({
+      return res.status(200).json({
         routeName: await RouteTable.findAll({
-            logging: console.log,
             attributes: [
                 'name',
-                'route',
                 [db.sequelize.fn('WEEKDAY', db.sequelize.col('datecreate')), "weekDay"],
                 [db.sequelize.literal(`round(sum(distinct volume)/count( distinct  volume), 2)`), 'avgVolume'],
             ],
@@ -970,7 +967,7 @@ exports.getReportPerDay = async ({query: {dateFrom, dateTo, name}}, res) => {
                 name,
                 datecreate: {[Op.between]: [dateFrom, dateTo]}
             },
-            group: ['name', 'route', [db.sequelize.fn('WEEKDAY', db.sequelize.col('datecreate')), "weekDay"]]
+            group: ['name',   [db.sequelize.fn('WEEKDAY', db.sequelize.col('datecreate')), "weekDay"]]
         })
     });
 }
