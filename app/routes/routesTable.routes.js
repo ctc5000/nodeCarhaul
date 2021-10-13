@@ -50,6 +50,9 @@ module.exports = app => {
 
     router.get("/getUser/:userId",  routeTable.getUser);
 
+    //Получить среднее значение за период в разбивке по дням неделям
+    //Передавать дата с - dateFrom,  по -  dateTo, name - аббривиатура, например ALAR
+    router.get("/getReportPerDay",  routeTable.getReportPerDay);
 
     app.use('/api/routesTable', router);
 };

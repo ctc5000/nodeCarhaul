@@ -939,3 +939,39 @@ exports.getRouteNameByUser = async ({query: {userId, page = 0, count = 11}}, res
         })
     });
 }
+
+exports.getReportPerDay = async ({query: {dateFrom, dateTo, name}}, res) => {
+    if (!dateFrom) {
+        return res.status(404).send({
+            message: "dateFrom not found!"
+        });
+    }
+    if (!dateTo) {
+        return res.status(404).send({
+            message: "dateTo not found!"
+        });
+    }
+    if (!name) {
+        return res.status(404).send({
+            message: "name not found!"
+        });
+    }
+    // select name, WEEKDAY(datecreate), round(sum(distinct volume)/count( distinct  volume), 2)  from aformattable where volume is not null group by name, WEEKDAY(datecreate);
+    return res.status(200).json({
+        routeName: await RouteTable.findAll({
+            logging: console.log,
+            attributes: [
+                'name',
+                'route',
+                [db.sequelize.fn('WEEKDAY', db.sequelize.col('datecreate')), "weekDay"],
+                [db.sequelize.literal(`round(sum(distinct volume)/count( distinct  volume), 2)`), 'avgVolume'],
+            ],
+            where: {
+                name,
+                datecreate: {[Op.between]: [dateFrom, dateTo]}
+            },
+            group: ['name', 'route', [db.sequelize.fn('WEEKDAY', db.sequelize.col('datecreate')), "weekDay"]]
+        })
+    });
+}
+
