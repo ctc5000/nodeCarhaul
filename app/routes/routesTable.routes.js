@@ -31,6 +31,9 @@ module.exports = app => {
     //Получить данные по направлению
     router.get("/detail",  routeTable.GetDetail);
 
+    //Получить данные направление по имени
+    router.get("/route/:routeName",  routeTable.GetDetailRoute);
+
     //Получить данные по направлению
     router.get("/trends",  routeTable.findAllTrendsAsync);
     //Получить рекомендации  по направлению

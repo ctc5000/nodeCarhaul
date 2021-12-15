@@ -212,6 +212,40 @@ exports.GetDetail = async ({query: {routeName, startDate, stopDate, userId}}, re
         profit: (userData.cars_count * Deatail.mid) - ((Deatail.Distances.distance / userData.avg_fuel_cons) * userData.fuel_price)-userData.other_exp,
     });
 }
+/*
+* Получить данные по направлению
+*/
+exports.GetDetailRoute = async ({params: {routeName},  query: {page, count = 11} }, res) => {
+    if (!routeName) {
+        res.status(400).send({
+            message: "Route Name can not be empty!"
+        });
+    }
+
+    return res.status(200).json({
+        item: await RouteTable.findAll({
+            attributes: [
+                'name',
+                'route',
+                'datecreate',
+                'low',
+                'mid',
+                'high',
+                'mile',
+                'volume'
+            ],
+            where: {
+                name: routeName,
+            },
+            order: [['datecreate', 'DESC']],
+            offset: page * count,
+            limit: count,
+        }),
+        count: await RouteTable.count({ where: {
+                name: routeName,
+            },   })
+    });
+}
 
 /*
 * Получить полные данные по таблице с параметрами
