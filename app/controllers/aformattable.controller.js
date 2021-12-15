@@ -215,7 +215,7 @@ exports.GetDetail = async ({query: {routeName, startDate, stopDate, userId}}, re
 /*
 * Получить данные по направлению
 */
-exports.GetDetailRoute = async ({query: {routeName, page, count = 11} }, res) => {
+exports.GetDetailRoute = async ({query: {routeName, page=0, count = 11} }, res) => {
     if (!routeName) {
         res.status(400).send({
             message: "Route Name can not be empty!"
