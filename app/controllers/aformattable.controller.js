@@ -215,13 +215,19 @@ exports.GetDetail = async ({query: {routeName, startDate, stopDate, userId}}, re
 /*
 * Получить данные по направлению
 */
-exports.GetDetailRoute = async ({query: {routeName, page=0, count = 11} }, res) => {
+exports.GetDetailRoute = async ({query: {routeName, startDate, stopDate, page=0, count = 11} }, res) => {
     if (!routeName) {
         res.status(400).send({
             message: "Route Name can not be empty!"
         });
     }
-
+    if (!startDate) {
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 365);
+    }
+    if (!stopDate) {
+        stopDate = new Date();
+    }
     return res.status(200).json({
         item: await RouteTable.findAll({
             attributes: [
@@ -236,6 +242,10 @@ exports.GetDetailRoute = async ({query: {routeName, page=0, count = 11} }, res) 
             ],
             where: {
                 name: routeName,
+                datecreate:
+                    {
+                        [Op.between]: [startDate, stopDate]
+                    },
             },
             order: [['datecreate', 'DESC']],
             offset: page * count,
@@ -243,6 +253,10 @@ exports.GetDetailRoute = async ({query: {routeName, page=0, count = 11} }, res) 
         }),
         count: await RouteTable.count({ where: {
                 name: routeName,
+                datecreate:
+                    {
+                        [Op.between]: [startDate, stopDate]
+                    },
             },   })
     });
 }
