@@ -249,7 +249,7 @@ exports.GetDetailRoute = async ({query: {routeName, startDate, stopDate, page=0,
             },
             order: [['datecreate', 'DESC']],
             offset: page * count,
-            limit: count,
+            limit: Number(count),
         }),
         count: await RouteTable.count({ where: {
                 name: routeName,
