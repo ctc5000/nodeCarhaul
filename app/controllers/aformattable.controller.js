@@ -869,6 +869,55 @@ exports.setUser = async ({params: {userId}, body: {user_login, user_pass, user_n
     await User.save();
     return res.status(200).json(User);
 };
+
+exports.createUser = async ({body: {user_login, user_pass, user_nicename, user_email, display_name, ratio, cars_count, fuel_price,avg_fuel_cons,other_exp}}, res) => {
+    if(!user_login)  res.status(404).send({
+        message: "Login for user not found!"
+    });
+    if(!user_pass)  res.status(404).send({
+        message: "Password for user not found!"
+    });
+    let User = await RouteTable.build({
+        user_login: user_login,
+        user_pass: crypto.createHash('md5').update(user_pass).digest('hex'),
+      });
+
+    if (user_nicename) User.user_nicename = user_nicename;
+    if (user_email) User.user_email = user_email;
+    if (display_name) User.display_name = display_name;
+    if (ratio) User.ratio = ratio;
+    if (cars_count) User.cars_count = cars_count;
+    if (fuel_price) User.fuel_price = fuel_price;
+    if (avg_fuel_cons) User.avg_fuel_cons = avg_fuel_cons;
+    if (other_exp) User.other_exp = other_exp;
+    if(cars_count && fuel_price&&avg_fuel_cons&&other_exp&&!ratio){
+        User.ratio = (cars_count*600)-((1000/avg_fuel_cons)*fuel_price)-other_exp;
+    }
+    await User.save();
+    return res.status(200).json(User);
+};
+
+exports.authUser = async ({body: {user_login, user_pass}}, res) => {
+    if(!user_login)  res.status(404).send({
+        message: "Login for user not found!"
+    });
+    if(!user_pass)  res.status(404).send({
+        message: "Password for user not found!"
+    });
+    let User = await RouteTable.findOne({
+        where: {user_login: user_login,
+        user_pass: crypto.createHash('md5').update(user_pass).digest('hex'),
+      }});
+    if (!User) {
+        return res.status(404).send({
+            message: "User not found!"
+        });
+    }
+
+    return res.status(200).json(User);
+};
+
+
 exports.deleteUserCar = async ({params: {userId}, body: {carId}}, res) => {
     const User = await Users.findOne({
         attributes: [`id`],

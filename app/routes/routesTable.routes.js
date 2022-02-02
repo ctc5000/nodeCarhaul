@@ -14,6 +14,7 @@ module.exports = app => {
 
     //Отредактировать пользователя
     router.post("/setUser/:userId", routeTable.setUser);
+    router.post("/setUser", routeTable.createUser);
 
     //Отредактировать/добавить машину пользователя
     router.post("/setUserCar/:userId", routeTable.setUserCar);
@@ -52,7 +53,7 @@ module.exports = app => {
     router.get("/getRouteNameByUser",  routeTable.getRouteNameByUser);
 
     router.get("/getUser/:userId",  routeTable.getUser);
-
+    router.post("/authUser",  routeTable.authUser);
     //Получить среднее значение за период в разбивке по дням неделям
     //Передавать дата с - dateFrom,  по -  dateTo, name - аббривиатура, например ALAR
     router.get("/getReportPerDay",  routeTable.getReportPerDay);
