@@ -53,6 +53,9 @@ module.exports = app => {
     router.get("/getRouteNameByUser",  routeTable.getRouteNameByUser);
 
     router.get("/getUser/:userId",  routeTable.getUser);
+
+    //Получить пользователя по логину и паролю
+    //Передавать user_login, user_pass
     router.post("/authUser",  routeTable.authUser);
     //Получить среднее значение за период в разбивке по дням неделям
     //Передавать дата с - dateFrom,  по -  dateTo, name - аббривиатура, например ALAR
@@ -61,6 +64,9 @@ module.exports = app => {
     //Получить статистику дня недели за год по направлениям
     //Передавать направление - name - аббривиатура, например ALAR
     router.get("/getBestDayRouteByName",  routeTable.getBestDayRouteByName);
+    //Получить статистику дня недели за год по направлениям
+    //Передавать направление - name - аббривиатура, например ALAR
+    router.get("/getBestMonthRouteByName",  routeTable.getBestMonthRouteByName);
 
     app.use('/api/routesTable', router);
 };

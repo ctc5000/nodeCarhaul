@@ -1066,6 +1066,18 @@ exports.getBestDayRouteByName = async ({query: {name}}, res) => {
         group by DAYOFWEEK(datecreate) order by DAYOFWEEK(datecreate);`, { type: QueryTypes.SELECT})
     });
 }
+exports.getBestMonthRouteByName = async ({query: {name}}, res) => {
+    if (!name) {
+        return res.status(404).send({
+            message: "RouteName not found!"
+        });
+    }
+    return res.status(200).json({
+        item: await Sequelize.query(`select max(volume)-avg(volume) as volume, name, MONTH(datecreate)-1 as daynum from aformattable where datecreate > DATE_SUB(datecreate, interval 1 YEAR)
+        and name = '${name}' and volume > 0
+        group by MONTH(datecreate) order by MONTH(datecreate);`, { type: QueryTypes.SELECT})
+    });
+}
 exports.getReportPerDay = async ({query: {dateFrom, dateTo, name}}, res) => {
     if (!dateFrom) {
         return res.status(404).send({
