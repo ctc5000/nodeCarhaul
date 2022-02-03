@@ -14,6 +14,9 @@ module.exports = (sequelize, Sequelize) => {
             user_pass: {
                 type: Sequelize.STRING
             },
+            user_phone: {
+                type: Sequelize.STRING
+            },
             user_nicename: {
                 type: Sequelize.STRING
             },

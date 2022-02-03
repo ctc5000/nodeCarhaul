@@ -58,5 +58,9 @@ module.exports = app => {
     //Передавать дата с - dateFrom,  по -  dateTo, name - аббривиатура, например ALAR
     router.get("/getReportPerDay",  routeTable.getReportPerDay);
 
+    //Получить статистику дня недели за год по направлениям
+    //Передавать направление - name - аббривиатура, например ALAR
+    router.get("/getBestDayRouteByName",  routeTable.getBestDayRouteByName);
+
     app.use('/api/routesTable', router);
 };

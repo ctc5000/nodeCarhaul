@@ -45,6 +45,8 @@ const operatorsAliases = {
     $col: Op.col
 };
 const crypto = require('crypto');
+const Sequelize = require("express");
+const { QueryTypes } = require('sequelize');
 /*
 * Создание записи таблицы
 */
@@ -157,9 +159,12 @@ exports.GetDetail = async ({query: {routeName, startDate, stopDate, userId}}, re
     if (!stopDate) {
         stopDate = new Date();
     }
-    let userData = {'cars_count':8, 'fuel_price':2.6, 'avg_fuel_cons':6.5, 'other_exp':0};
-    if(userId){
-        userData = await Users.findOne({attributes:['cars_count', 'fuel_price', 'avg_fuel_cons', 'other_exp'], where:{id:userId}});
+    let userData = {'cars_count': 8, 'fuel_price': 2.6, 'avg_fuel_cons': 6.5, 'other_exp': 0};
+    if (userId) {
+        userData = await Users.findOne({
+            attributes: ['cars_count', 'fuel_price', 'avg_fuel_cons', 'other_exp'],
+            where: {id: userId}
+        });
     }
     const Deatail = await RouteTable.findOne({
         attributes: [
@@ -192,7 +197,7 @@ exports.GetDetail = async ({query: {routeName, startDate, stopDate, userId}}, re
         group: ['name'],
     });
     return res.status(200).json({
-        Deatail:[Deatail],
+        Deatail: [Deatail],
         GraphPoints: await RouteTable.findAll({
             attributes: [
                 ['mid', 'price'],
@@ -209,13 +214,13 @@ exports.GetDetail = async ({query: {routeName, startDate, stopDate, userId}}, re
             group: ['datecreate'],
             order: [['datecreate', 'DESC']]
         }),
-        profit: (userData.cars_count * Deatail.mid) - ((Deatail.Distances.distance / userData.avg_fuel_cons) * userData.fuel_price)-userData.other_exp,
+        profit: (userData.cars_count * Deatail.mid) - ((Deatail.Distances.distance / userData.avg_fuel_cons) * userData.fuel_price) - userData.other_exp,
     });
 }
 /*
 * Получить данные по направлению
 */
-exports.GetDetailRoute = async ({query: {routeName, startDate, stopDate, page=0, count = 11} }, res) => {
+exports.GetDetailRoute = async ({query: {routeName, startDate, stopDate, page = 0, count = 11}}, res) => {
     if (!routeName) {
         res.status(400).send({
             message: "Route Name can not be empty!"
@@ -251,13 +256,15 @@ exports.GetDetailRoute = async ({query: {routeName, startDate, stopDate, page=0,
             offset: page * count,
             limit: Number(count),
         }),
-        count: await RouteTable.count({ where: {
+        count: await RouteTable.count({
+            where: {
                 name: routeName,
                 datecreate:
                     {
                         [Op.between]: [startDate, stopDate]
                     },
-            },   })
+            },
+        })
     });
 }
 
@@ -286,9 +293,12 @@ exports.findAllAsync = async ({
     if (!stopDate) {
         stopDate = new Date();
     }
-    let userData = {'cars_count':8, 'fuel_price':2.6, 'avg_fuel_cons':6.5, 'other_exp':0};
-    if(userId){
-        userData = await Users.findOne({attributes:['cars_count', 'fuel_price', 'avg_fuel_cons', 'other_exp'], where:{id:userId}});
+    let userData = {'cars_count': 8, 'fuel_price': 2.6, 'avg_fuel_cons': 6.5, 'other_exp': 0};
+    if (userId) {
+        userData = await Users.findOne({
+            attributes: ['cars_count', 'fuel_price', 'avg_fuel_cons', 'other_exp'],
+            where: {id: userId}
+        });
     }
     let statesJson = "";
     let where = {
@@ -410,7 +420,7 @@ exports.findAllAsync = async ({
                         ToState: it.name.substring(2, 4),
                     }
                 }),
-            profit: (userData.cars_count * Deatail.mid) - ((Deatail.Distances.distance / userData.avg_fuel_cons) * userData.fuel_price)-userData.other_exp,
+            profit: (userData.cars_count * Deatail.mid) - ((Deatail.Distances.distance / userData.avg_fuel_cons) * userData.fuel_price) - userData.other_exp,
 
 
         })));
@@ -840,10 +850,10 @@ exports.deleteUserToRoute = async ({body: {userId, routeName}}, res) => {
 };
 
 
-exports.setUser = async ({params: {userId}, body: {user_login, user_pass, user_nicename, user_email, display_name, ratio, cars_count, fuel_price,avg_fuel_cons,other_exp}}, res) => {
+exports.setUser = async ({params: {userId}, body: {user_login, user_pass, user_phone, user_nicename, user_email, display_name, ratio, cars_count, fuel_price, avg_fuel_cons, other_exp}}, res) => {
 
     const User = await Users.findOne({
-        attributes: [`id`, `user_status`, `user_login`, `user_pass`, `user_nicename`, `user_email`, `user_url`, `display_name`, `ratio`, `cars_count`, `fuel_price`,`avg_fuel_cons`,`other_exp`],
+        attributes: [`id`, `user_status`, `user_login`, `user_pass`, `user_nicename`, `user_email`, `user_url`, `display_name`, `ratio`, `cars_count`, `fuel_price`, `avg_fuel_cons`, `other_exp`],
         where: {
             id: userId,
         }
@@ -854,6 +864,7 @@ exports.setUser = async ({params: {userId}, body: {user_login, user_pass, user_n
         });
     }
     if (user_login) User.user_login = user_login;
+    if (user_phone) User.user_phone = user_phone;
     if (user_pass) User.user_pass = crypto.createHash('md5').update(user_pass).digest('hex');
     if (user_nicename) User.user_nicename = user_nicename;
     if (user_email) User.user_email = user_email;
@@ -863,24 +874,28 @@ exports.setUser = async ({params: {userId}, body: {user_login, user_pass, user_n
     if (fuel_price) User.fuel_price = fuel_price;
     if (avg_fuel_cons) User.avg_fuel_cons = avg_fuel_cons;
     if (other_exp) User.other_exp = other_exp;
-    if(cars_count && fuel_price&&avg_fuel_cons&&other_exp&&!ratio){
-        User.ratio = (cars_count*600)-((1000/avg_fuel_cons)*fuel_price)-other_exp;
+    if (cars_count && fuel_price && avg_fuel_cons && other_exp && !ratio) {
+        User.ratio = (cars_count * 600) - ((1000 / avg_fuel_cons) * fuel_price) - other_exp;
     }
     await User.save();
     return res.status(200).json(User);
 };
 
-exports.createUser = async ({body: {user_login, user_pass, user_nicename, user_email, display_name, ratio, cars_count, fuel_price,avg_fuel_cons,other_exp}}, res) => {
-    if(!user_login)  res.status(404).send({
+exports.createUser = async ({body: {user_login, user_pass, user_phone, user_nicename, user_email, display_name, ratio, cars_count, fuel_price, avg_fuel_cons, other_exp}}, res) => {
+    if (!user_login) res.status(404).send({
         message: "Login for user not found!"
     });
-    if(!user_pass)  res.status(404).send({
+    if (!user_pass) res.status(404).send({
         message: "Password for user not found!"
+    });
+    if (!user_phone) res.status(404).send({
+        message: "Phone for user not found!"
     });
     let User = await RouteTable.build({
         user_login: user_login,
         user_pass: crypto.createHash('md5').update(user_pass).digest('hex'),
-      });
+        user_phone: user_phone,
+    });
 
     if (user_nicename) User.user_nicename = user_nicename;
     if (user_email) User.user_email = user_email;
@@ -890,24 +905,26 @@ exports.createUser = async ({body: {user_login, user_pass, user_nicename, user_e
     if (fuel_price) User.fuel_price = fuel_price;
     if (avg_fuel_cons) User.avg_fuel_cons = avg_fuel_cons;
     if (other_exp) User.other_exp = other_exp;
-    if(cars_count && fuel_price&&avg_fuel_cons&&other_exp&&!ratio){
-        User.ratio = (cars_count*600)-((1000/avg_fuel_cons)*fuel_price)-other_exp;
+    if (cars_count && fuel_price && avg_fuel_cons && other_exp && !ratio) {
+        User.ratio = (cars_count * 600) - ((1000 / avg_fuel_cons) * fuel_price) - other_exp;
     }
     await User.save();
     return res.status(200).json(User);
 };
 
 exports.authUser = async ({body: {user_login, user_pass}}, res) => {
-    if(!user_login)  res.status(404).send({
+    if (!user_login) res.status(404).send({
         message: "Login for user not found!"
     });
-    if(!user_pass)  res.status(404).send({
+    if (!user_pass) res.status(404).send({
         message: "Password for user not found!"
     });
     let User = await RouteTable.findOne({
-        where: {user_login: user_login,
-        user_pass: crypto.createHash('md5').update(user_pass).digest('hex'),
-      }});
+        where: {
+            user_login: user_login,
+            user_pass: crypto.createHash('md5').update(user_pass).digest('hex'),
+        }
+    });
     if (!User) {
         return res.status(404).send({
             message: "User not found!"
@@ -968,16 +985,16 @@ exports.setUserCar = async ({params: {userId}, body: {carId, name, type, volume,
             name: name,
             type: type,
             volume: volume,
-            mileage:mileage,
-            userId:userId
+            mileage: mileage,
+            userId: userId
         });
     } else {
         cars = await car.build({
             name: name,
             type: type,
             volume: volume,
-            mileage:mileage,
-            userId:userId
+            mileage: mileage,
+            userId: userId
         });
     }
     await cars.save();
@@ -1036,7 +1053,18 @@ exports.getRouteNameByUser = async ({query: {userId, page = 0, count = 11}}, res
         })
     });
 }
-
+exports.getBestDayRouteByName = async ({query: {name}}, res) => {
+    if (!name) {
+        return res.status(404).send({
+            message: "RouteName not found!"
+        });
+    }
+    return res.status(200).json({
+        item: await Sequelize.query(`select max(volume)-avg(volume) as volume, name, DAYOFWEEK(datecreate)-1 as daynum from aformattable where datecreate > DATE_SUB(datecreate, interval 1 YEAR)
+        and name = '$1' and volume > 0
+        group by DAYOFWEEK(datecreate) order by DAYOFWEEK(datecreate);`, { type: QueryTypes.SELECT, logging: console.log, bind:name })
+    });
+}
 exports.getReportPerDay = async ({query: {dateFrom, dateTo, name}}, res) => {
     if (!dateFrom) {
         return res.status(404).send({
@@ -1053,7 +1081,7 @@ exports.getReportPerDay = async ({query: {dateFrom, dateTo, name}}, res) => {
             message: "name not found!"
         });
     }
-      return res.status(200).json({
+    return res.status(200).json({
         routeName: await RouteTable.findAll({
             attributes: [
                 'name',
@@ -1064,7 +1092,7 @@ exports.getReportPerDay = async ({query: {dateFrom, dateTo, name}}, res) => {
                 name,
                 datecreate: {[Op.between]: [dateFrom, dateTo]}
             },
-            group: ['name',   [db.sequelize.fn('WEEKDAY', db.sequelize.col('datecreate')), "weekDay"]]
+            group: ['name', [db.sequelize.fn('WEEKDAY', db.sequelize.col('datecreate')), "weekDay"]]
         })
     });
 }
