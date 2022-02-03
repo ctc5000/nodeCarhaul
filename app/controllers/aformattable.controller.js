@@ -1073,7 +1073,7 @@ exports.getBestMonthRouteByName = async ({query: {name}}, res) => {
         });
     }
     return res.status(200).json({
-        item: await Sequelize.query(`select max(volume)-avg(volume) as volume, name, MONTH(datecreate)-1 as daynum from aformattable where datecreate > DATE_SUB(datecreate, interval 1 YEAR)
+        item: await Sequelize.query(`select max(volume)-avg(volume) as volume, name, MONTH(datecreate) as monthnum from aformattable where datecreate > DATE_SUB(datecreate, interval 1 YEAR)
         and name = '${name}' and volume > 0
         group by MONTH(datecreate) order by MONTH(datecreate);`, { type: QueryTypes.SELECT})
     });
