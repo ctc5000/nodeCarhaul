@@ -45,7 +45,7 @@ const operatorsAliases = {
     $col: Op.col
 };
 const crypto = require('crypto');
-const Sequelize = require("express");
+const Sequelize = db.sequelize;
 const { QueryTypes } = require('sequelize');
 /*
 * Создание записи таблицы
@@ -1059,6 +1059,11 @@ exports.getBestDayRouteByName = async ({query: {name}}, res) => {
             message: "RouteName not found!"
         });
     }
+    console.log('item');
+    let item= await Sequelize.query(`select max(volume)-avg(volume) as volume, name, DAYOFWEEK(datecreate)-1 as daynum from aformattable where datecreate > DATE_SUB(datecreate, interval 1 YEAR)
+        and name = '$1' and volume > 0
+        group by DAYOFWEEK(datecreate) order by DAYOFWEEK(datecreate);`, { type: QueryTypes.SELECT, logging: console.log, bind:name });
+    console.log(item);
     return res.status(200).json({
         item: await Sequelize.query(`select max(volume)-avg(volume) as volume, name, DAYOFWEEK(datecreate)-1 as daynum from aformattable where datecreate > DATE_SUB(datecreate, interval 1 YEAR)
         and name = '$1' and volume > 0
