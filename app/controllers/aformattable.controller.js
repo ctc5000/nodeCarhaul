@@ -1061,13 +1061,13 @@ exports.getBestDayRouteByName = async ({query: {name}}, res) => {
     }
     console.log('item');
     let item= await Sequelize.query(`select max(volume)-avg(volume) as volume, name, DAYOFWEEK(datecreate)-1 as daynum from aformattable where datecreate > DATE_SUB(datecreate, interval 1 YEAR)
-        and name = '$1' and volume > 0
-        group by DAYOFWEEK(datecreate) order by DAYOFWEEK(datecreate);`, { type: QueryTypes.SELECT, logging: console.log, bind:name });
+        and name = '${name}' and volume > 0
+        group by DAYOFWEEK(datecreate) order by DAYOFWEEK(datecreate);`, { type: QueryTypes.SELECT, logging: console.log});
     console.log(item);
     return res.status(200).json({
         item: await Sequelize.query(`select max(volume)-avg(volume) as volume, name, DAYOFWEEK(datecreate)-1 as daynum from aformattable where datecreate > DATE_SUB(datecreate, interval 1 YEAR)
-        and name = '$1' and volume > 0
-        group by DAYOFWEEK(datecreate) order by DAYOFWEEK(datecreate);`, { type: QueryTypes.SELECT, logging: console.log, bind:name })
+        and name = '${name}' and volume > 0
+        group by DAYOFWEEK(datecreate) order by DAYOFWEEK(datecreate);`, { type: QueryTypes.SELECT, logging: console.log })
     });
 }
 exports.getReportPerDay = async ({query: {dateFrom, dateTo, name}}, res) => {
