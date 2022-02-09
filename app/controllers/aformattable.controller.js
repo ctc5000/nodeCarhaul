@@ -1142,7 +1142,7 @@ exports.createUser = async ({body: {user_login, user_pass, user_phone, user_nice
     if (!user_phone) res.status(404).send({
         message: "Phone for user not found!"
     });
-    let User = await RouteTable.build({
+    let User = await Users.build({
         user_login: user_login,
         user_pass: crypto.createHash('md5').update(user_pass).digest('hex'),
         user_phone: user_phone,
