@@ -25,7 +25,8 @@ module.exports = app => {
 
     //Получить полные данные по таблице с параметрами
     router.get("/",  routeTable.findAllAsync);
-
+    //Получить полные данные по таблице с параметрами
+    router.get("/rt",  routeTable.findAllAsync2);
  //Получить полные данные по таблице с параметрами и фильтргом по states
     router.get("/states",  routeTable.findAllAsyncFiltered);
 
