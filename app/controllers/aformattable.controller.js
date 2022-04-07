@@ -927,8 +927,8 @@ exports.findAllDetailAsyncFiltered = async (req, res) => {
     const sorts = {
         mid:  [["mid", sortType]],
         route:  [["route", sortType]],
-        avgPrice: [["avgPrice", sortType]],
-        avgVolume: [["avgVolume", sortType]],
+        avgPrice: [[db.sequelize.fn('AVG', db.sequelize.col('mid')), sortType]],
+        avgVolume: [[db.sequelize.fn('AVG', db.sequelize.col('volume')), sortType]],
         mile: [["mile", sortType]],
         distance: [[{model: Distance, as: 'Distances'}, "distance", sortType]]
     }
