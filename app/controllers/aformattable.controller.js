@@ -918,24 +918,34 @@ exports.findAllDetailAsyncFiltered = async (req, res) => {
         state = "AL",
         startDate = dateStart,
         stopDate = new Date(),
-
+        sortField = "mid",
+        sortType = "DESC",
+        distanceFrom=0,
+        distanceTo=10000,
     } = req.query;
 
-
+    const sorts = {
+        mid:  [["mid", sortType]],
+        route:  [["route", sortType]],
+        avgPrice: [["avgPrice", sortType]],
+        avgVolume: [["avgVolume", sortType]],
+        mile: [["mile", sortType]],
+        distance: [[{model: Distance, as: 'Distances'}, "distance", sortType]]
+    }
     let TableData = await Promise.all((await Dictionary.findAll({
         attributes: ['name']
     })).map(async (it) => ({
         ...(it.toJSON()),
         name: state + it.name,
     })));
-    let order = [["mid", 'DESC']];
+    let order = (sorts[sortField])?sorts[sortField]:[["mid", 'DESC']];
 
     let ArrNames = [];
     TableData.forEach(function (item) {
         ArrNames.push(item.name);
     });
 
-    console.log(ArrNames);
+  //  console.log(ArrNames);
     let DataTable = await Promise.all((
 
         await RouteTable.findAll({
@@ -978,7 +988,7 @@ exports.findAllDetailAsyncFiltered = async (req, res) => {
                 where: {
                     distance:
                         {
-                            [Op.between]: [0, 10000]
+                            [Op.between]: [distanceFrom, distanceTo]
                         }
                 }
             }],
